@@ -1,0 +1,13 @@
+[Unit]
+Description=Initialize eGPU BAR for RX 6800 on T2 Mac Mini
+After=thunderbolt.service systemd-udevd.service
+Wants=thunderbolt.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/egpu-init.sh
+RemainAfterExit=yes
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target
