@@ -191,7 +191,7 @@ I also set `OLLAMA_KEEP_ALIVE=-1` to keep the model in VRAM permanently. On a de
 
 For batch and async workloads - metadata enrichment, document processing, long-running pipelines - 6–15 tok/s on a machine drawing 300W in a closet is exactly what I needed. Interactive use works fine up to 8K context (12.4 tok/s). At 32K context, 6.1 tok/s is slow for chat but perfectly usable for unattended jobs.
 
-Full benchmark data: [stability test](benchmark-results.txt) (232 inferences, 72 minutes) and [context stress test](context-test-results.txt) (context ladder + 30-minute sustained 8K soak).
+Full benchmark data: [stability test](benchmarks/benchmark-results.txt) (232 inferences, 72 minutes) and [context stress test](benchmarks/context-test-results.txt) (context ladder + 30-minute sustained 8K soak).
 
 It works, and it's been stable for days now.
 
