@@ -120,7 +120,80 @@ Is this the sensible way to do local inference? No. Buy a used workstation and p
 
 But I had the hardware. And after the Thunderbolt 2 disaster, I wasn't going to let Apple's firmware win twice.
 
-It works, and it's been serving reliably for a few days now.
+It works. But "works" is a vague word. I wanted numbers.
+
+## Benchmarking: How Stable Is This Actually?
+
+Once the eGPU was initializing cleanly on every boot, I loaded Qwen3 14B (Q4_K_M quantization, 9.3GB) via Ollama and ran it hard.
+
+### Methodology
+
+Three test phases, all automated, zero monitoring:
+
+1. **Throughput baseline** — 20 warm inference runs with varied technical prompts, 256 token output cap. Measured generation speed, model load time, and variance.
+2. **Stability soak** — 232 consecutive inferences over 72 minutes. Tracked tok/s drift, VRAM usage, GPU errors via `dmesg`, and Ollama process health.
+3. **Context stress** — escalating context windows from 1K to 32K tokens using a generated technical corpus (not repeated sentences — actual varied paragraphs to prevent prompt caching from hiding real memory pressure). Each test used `num_ctx` set explicitly to force Ollama to pre-allocate the full KV cache.
+
+### Results
+
+**Throughput:** 15.4–15.5 tok/s, dead consistent across 20 runs. ±0.1 tok/s variance. Cold start: 1.38s model load, 15.8 tok/s first generation. Thunderbolt 3 bandwidth is not the bottleneck at this model size.
+
+**Stability:** 232 inferences, zero failures, zero GPU errors in `dmesg`, no VRAM leak (9949MB → 9975MB over 72 minutes), no tok/s degradation. The eGPU via Thunderbolt 3 is stable under sustained load. The BAR programming fix from `egpu-init.service` has held through every reboot and extended run.
+
+**Context ladder (default Ollama, FP16 KV cache):**
+
+| Context | Prompt Tokens | Gen Speed | Result |
+|---------|--------------|-----------|--------|
+| 1K | 816 | 14.9 tok/s | OK |
+| 4K | 3,009 | 13.9 tok/s | OK |
+| 8K | 5,993 | 12.4 tok/s | OK |
+| 16K | 12,068 | 10.2 tok/s | OK |
+| 24K | ~18,000 | — | **OOM** |
+| 32K | — | — | **OOM** |
+
+Hard ceiling at ~16K tokens. At 24K, Ollama pre-allocates the KV cache for the full context window, exhausts the 16GB VRAM, and the process dies. No GPU fault — clean memory exhaustion.
+
+### The Context Wall
+
+Qwen3 14B supports 40,960 tokens natively, but model weights and KV cache compete for the same 16GB. The model takes ~9.6GB, leaving ~6.7GB. With FP16 key-value cache (Ollama's default), the KV vectors across all 40 layers eat that headroom fast. At 16K context you're at ~12.1GB. At 24K the math doesn't work anymore.
+
+I initially assumed 6.7GB of headroom meant 32K was reachable. It wasn't. KV cache at FP16 precision scales faster than napkin math suggests when you account for all 40 layers of key and value tensors.
+
+### Doubling the Context Window
+
+Two environment variables in Ollama's systemd service:
+
+```ini
+Environment="OLLAMA_FLASH_ATTENTION=1"
+Environment="OLLAMA_KV_CACHE_TYPE=q8_0"
+```
+
+**Q8 KV cache quantization** stores key-value vectors at 8-bit instead of 16-bit, cutting KV cache memory roughly in half. The quality impact is negligible — the model weights themselves are already quantized to Q4, so Q8 KV cache is actually *higher precision* than the weights.
+
+**Flash attention** reorganizes the attention computation to reduce peak VRAM during the forward pass.
+
+**After optimization:**
+
+| Context | Prompt Tokens | Gen Speed | VRAM | Result |
+|---------|--------------|-----------|------|--------|
+| 24K | 14,568 | 8.2 tok/s | 12.2 GB | **OK** (was OOM) |
+| 32K | 26,292 | 6.1 tok/s | 13.0 GB | **OK** (was OOM) |
+
+VRAM at 32K: 13.0GB of 16.3GB — 3.2GB of headroom remaining. The usable context window doubled with no measurable quality loss.
+
+I also set `OLLAMA_KEEP_ALIVE=-1` to keep the model in VRAM permanently. On a dedicated inference node, the default 5-minute idle eviction means every request after a quiet period pays a cold-start penalty for no reason.
+
+### Sustained Long Context
+
+73 consecutive inferences at 8K context over 30 minutes. Zero failures. 12.4 tok/s constant. No VRAM drift. Ollama's prompt caching kicked in after run 3, pushing prompt evaluation from 130 tok/s to 71,000 tok/s for repeated prefixes — effectively free.
+
+### What the Numbers Mean
+
+For batch and async workloads — metadata enrichment, document processing, long-running pipelines — 6-15 tok/s on a machine drawing 300W in a closet is exactly what I needed. Interactive use works fine up to 8K context (12.4 tok/s). At 32K context, 6.1 tok/s is slow for chat but perfectly usable for unattended jobs.
+
+Full benchmark data: [stability test](benchmark-results.txt) (232 inferences, 72 minutes) and [context stress test](context-test-results.txt) (context ladder + 30-minute sustained 8K soak).
+
+It works, and it's been stable for weeks now.
 
 The entire setup — kernel module, boot scripts, systemd service, modprobe config, GRUB parameters, and a detailed step-by-step guide — is at [github.com/philmcneely/t2-egpu-linux](https://github.com/philmcneely/t2-egpu-linux).
 

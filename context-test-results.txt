@@ -1,0 +1,600 @@
+[19:37:42] ==========================================
+[19:37:42] Mac Mini T2 eGPU — Long Context Test
+[19:37:42] Started: Mon Jul 13 19:37:42 CDT 2026
+[19:37:42] Model context_length: 40960 tokens
+[19:37:42] ==========================================
+[19:37:42] 
+[19:37:42] === PRE-FLIGHT ===
+[19:37:42]   RAM: 15Gi total, 1.7Gi used, 13Gi available
+[19:37:42]   VRAM used: 16261120
+[19:37:42]   VRAM total: 17163091968
+[19:37:42]   GPU errors: 0
+0
+[19:37:42] 
+[19:37:42] === CONTEXT LADDER ===
+[19:37:51] 
+[19:37:51] --- Context test: ~1000 tokens (num_ctx=2048) ---
+[19:37:51]   Generated corpus: 586 words
+[19:38:20]   [ctx-1k] OK: prompt=816tok gen=256tok
+[19:38:20]   [ctx-1k] prompt_speed=134.8tok/s gen_speed=14.9tok/s wall=28996ms
+[19:38:20]   [ctx-1k] VRAM delta: -300MB
+[19:38:20]   [ctx-1k] >>> 
+[19:38:23] 
+[19:38:23] --- Context test: ~2000 tokens (num_ctx=4096) ---
+[19:38:23]   Generated corpus: 1135 words
+[19:38:58]   [ctx-2k] OK: prompt=1534tok gen=256tok
+[19:38:58]   [ctx-2k] prompt_speed=139.6tok/s gen_speed=14.5tok/s wall=34329ms
+[19:38:58]   [ctx-2k] VRAM delta: 322MB
+[19:38:58]   [ctx-2k] >>> 
+[19:39:01] 
+[19:39:01] --- Context test: ~4000 tokens (num_ctx=8192) ---
+[19:39:01]   Generated corpus: 2258 words
+[19:39:47]   [ctx-4k] OK: prompt=3009tok gen=256tok
+[19:39:47]   [ctx-4k] prompt_speed=136.2tok/s gen_speed=13.9tok/s wall=46364ms
+[19:39:47]   [ctx-4k] VRAM delta: 802MB
+[19:39:47]   [ctx-4k] >>> 
+[19:39:50] 
+[19:39:50] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:39:50]   Generated corpus: 4501 words
+[19:41:03]   [ctx-8k] OK: prompt=5993tok gen=256tok
+[19:41:03]   [ctx-8k] prompt_speed=130.9tok/s gen_speed=12.4tok/s wall=72214ms
+[19:41:03]   [ctx-8k] VRAM delta: 1296MB
+[19:41:03]   [ctx-8k] >>> 
+[19:41:06] 
+[19:41:06] --- Context test: ~16000 tokens (num_ctx=24576) ---
+[19:41:06]   Generated corpus: 8951 words
+[19:43:22]   [ctx-16k] OK: prompt=12068tok gen=256tok
+[19:43:22]   [ctx-16k] prompt_speed=115.0tok/s gen_speed=10.2tok/s wall=135995ms
+[19:43:22]   [ctx-16k] VRAM delta: 1122MB
+[19:43:22]   [ctx-16k] >>> 
+[19:43:25] 
+[19:43:25] --- Context test: ~24000 tokens (num_ctx=32768) ---
+[19:43:25]   Generated corpus: 13391 words
+[19:44:58]   [ctx-24k] FAILED (timeout or error after 92707ms)
+[19:44:58]   [ctx-24k] Ollama status: deactivating
+[19:44:58]   [ctx-24k] GPU errors: 0
+0
+[19:45:01] 
+[19:45:01] --- Context test: ~32000 tokens (num_ctx=40960) ---
+[19:45:01]   Generated corpus: 17833 words
+[19:45:01]   [ctx-32k] FAILED (timeout or error after 5ms)
+[19:45:01]   [ctx-32k] Ollama status: active
+[19:45:01]   [ctx-32k] GPU errors: 0
+0
+[19:45:04] 
+[19:45:04] === BEYOND RATED CONTEXT (40960) ===
+[19:45:04] 
+[19:45:04] --- Context test: ~38000 tokens (num_ctx=40960) ---
+[19:45:04]   Generated corpus: 21162 words
+[19:45:04]   [ctx-38k] FAILED (timeout or error after 5ms)
+[19:45:04]   [ctx-38k] Ollama status: active
+[19:45:04]   [ctx-38k] GPU errors: 0
+0
+[19:45:07] 
+[19:45:07] === SUSTAINED LONG CONTEXT (30 min at ~8K tokens) ===
+[19:45:07] 
+[19:45:07] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:45:07]   Generated corpus: 4501 words
+[19:46:24]   [sustained-8k-1] OK: prompt=5993tok gen=256tok
+[19:46:24]   [sustained-8k-1] prompt_speed=130.9tok/s gen_speed=12.4tok/s wall=77337ms
+[19:46:24]   [sustained-8k-1] VRAM delta: 11513MB
+[19:46:24]   [sustained-8k-1] >>> 
+[19:46:26] 
+[19:46:26] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:46:26]   Generated corpus: 4501 words
+[19:47:41]   [sustained-8k-2] OK: prompt=5993tok gen=256tok
+[19:47:41]   [sustained-8k-2] prompt_speed=130.9tok/s gen_speed=12.4tok/s wall=74423ms
+[19:47:41]   [sustained-8k-2] VRAM delta: 2989MB
+[19:47:41]   [sustained-8k-2] >>> 
+[19:47:43] 
+[19:47:43] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:47:43]   Generated corpus: 4501 words
+[19:48:04]   [sustained-8k-3] OK: prompt=5993tok gen=256tok
+[19:48:04]   [sustained-8k-3] prompt_speed=70668.8tok/s gen_speed=12.4tok/s wall=21018ms
+[19:48:04]   [sustained-8k-3] VRAM delta: 0MB
+[19:48:04]   [sustained-8k-3] >>> 
+[19:48:06] 
+[19:48:06] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:48:06]   Generated corpus: 4501 words
+[19:48:27]   [sustained-8k-4] OK: prompt=5993tok gen=256tok
+[19:48:27]   [sustained-8k-4] prompt_speed=71052.6tok/s gen_speed=12.4tok/s wall=21016ms
+[19:48:27]   [sustained-8k-4] VRAM delta: 0MB
+[19:48:27]   [sustained-8k-4] >>> 
+[19:48:29] 
+[19:48:29] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:48:29]   Generated corpus: 4501 words
+[19:48:51]   [sustained-8k-5] OK: prompt=5993tok gen=256tok
+[19:48:51]   [sustained-8k-5] prompt_speed=70701.4tok/s gen_speed=12.4tok/s wall=21016ms
+[19:48:51]   [sustained-8k-5] VRAM delta: 0MB
+[19:48:51]   [sustained-8k-5] >>> 
+[19:48:53] 
+[19:48:53] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:48:53]   Generated corpus: 4501 words
+[19:49:14]   [sustained-8k-6] OK: prompt=5993tok gen=256tok
+[19:49:14]   [sustained-8k-6] prompt_speed=70844.3tok/s gen_speed=12.4tok/s wall=21019ms
+[19:49:14]   [sustained-8k-6] VRAM delta: 0MB
+[19:49:14]   [sustained-8k-6] >>> 
+[19:49:16] 
+[19:49:16] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:49:16]   Generated corpus: 4501 words
+[19:49:37]   [sustained-8k-7] OK: prompt=5993tok gen=256tok
+[19:49:37]   [sustained-8k-7] prompt_speed=71088.0tok/s gen_speed=12.4tok/s wall=21027ms
+[19:49:37]   [sustained-8k-7] VRAM delta: 0MB
+[19:49:37]   [sustained-8k-7] >>> 
+[19:49:39] 
+[19:49:39] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:49:39]   Generated corpus: 4501 words
+[19:50:00]   [sustained-8k-8] OK: prompt=5993tok gen=256tok
+[19:50:00]   [sustained-8k-8] prompt_speed=71187.6tok/s gen_speed=12.4tok/s wall=21020ms
+[19:50:00]   [sustained-8k-8] VRAM delta: 0MB
+[19:50:00]   [sustained-8k-8] >>> 
+[19:50:02] 
+[19:50:02] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:50:02]   Generated corpus: 4501 words
+[19:50:23]   [sustained-8k-9] OK: prompt=5993tok gen=256tok
+[19:50:23]   [sustained-8k-9] prompt_speed=70779.8tok/s gen_speed=12.4tok/s wall=21014ms
+[19:50:23]   [sustained-8k-9] VRAM delta: 0MB
+[19:50:23]   [sustained-8k-9] >>> 
+[19:50:25] 
+[19:50:25] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:50:25]   Generated corpus: 4501 words
+[19:50:47]   [sustained-8k-10] OK: prompt=5993tok gen=256tok
+[19:50:47]   [sustained-8k-10] prompt_speed=71158.0tok/s gen_speed=12.4tok/s wall=21023ms
+[19:50:47]   [sustained-8k-10] VRAM delta: 0MB
+[19:50:47]   [sustained-8k-10] >>> 
+[19:50:49] 
+[19:50:49] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:50:49]   Generated corpus: 4501 words
+[19:51:10]   [sustained-8k-11] OK: prompt=5993tok gen=256tok
+[19:51:10]   [sustained-8k-11] prompt_speed=70868.6tok/s gen_speed=12.4tok/s wall=21014ms
+[19:51:10]   [sustained-8k-11] VRAM delta: 0MB
+[19:51:10]   [sustained-8k-11] >>> 
+[19:51:12] 
+[19:51:12] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:51:12]   Generated corpus: 4501 words
+[19:51:33]   [sustained-8k-12] OK: prompt=5993tok gen=256tok
+[19:51:33]   [sustained-8k-12] prompt_speed=70955.0tok/s gen_speed=12.4tok/s wall=21016ms
+[19:51:33]   [sustained-8k-12] VRAM delta: 0MB
+[19:51:33]   [sustained-8k-12] >>> 
+[19:51:35] 
+[19:51:35] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:51:35]   Generated corpus: 4501 words
+[19:51:56]   [sustained-8k-13] OK: prompt=5993tok gen=256tok
+[19:51:56]   [sustained-8k-13] prompt_speed=70955.0tok/s gen_speed=12.4tok/s wall=21030ms
+[19:51:56]   [sustained-8k-13] VRAM delta: 0MB
+[19:51:56]   [sustained-8k-13] >>> 
+[19:51:58] 
+[19:51:58] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:51:58]   Generated corpus: 4501 words
+[19:52:19]   [sustained-8k-14] OK: prompt=5993tok gen=256tok
+[19:52:19]   [sustained-8k-14] prompt_speed=71250.2tok/s gen_speed=12.4tok/s wall=21019ms
+[19:52:19]   [sustained-8k-14] VRAM delta: 0MB
+[19:52:19]   [sustained-8k-14] >>> 
+[19:52:21] 
+[19:52:21] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:52:21]   Generated corpus: 4501 words
+[19:52:43]   [sustained-8k-15] OK: prompt=5993tok gen=256tok
+[19:52:43]   [sustained-8k-15] prompt_speed=70971.0tok/s gen_speed=12.4tok/s wall=21019ms
+[19:52:43]   [sustained-8k-15] VRAM delta: 0MB
+[19:52:43]   [sustained-8k-15] >>> 
+[19:52:45] 
+[19:52:45] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:52:45]   Generated corpus: 4501 words
+[19:53:06]   [sustained-8k-16] OK: prompt=5993tok gen=256tok
+[19:53:06]   [sustained-8k-16] prompt_speed=71140.3tok/s gen_speed=12.4tok/s wall=21010ms
+[19:53:06]   [sustained-8k-16] VRAM delta: 0MB
+[19:53:06]   [sustained-8k-16] >>> 
+[19:53:08] 
+[19:53:08] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:53:08]   Generated corpus: 4501 words
+[19:53:29]   [sustained-8k-17] OK: prompt=5993tok gen=256tok
+[19:53:29]   [sustained-8k-17] prompt_speed=71113.3tok/s gen_speed=12.4tok/s wall=21017ms
+[19:53:29]   [sustained-8k-17] VRAM delta: 0MB
+[19:53:29]   [sustained-8k-17] >>> 
+[19:53:31] 
+[19:53:31] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:53:31]   Generated corpus: 4501 words
+[19:53:52]   [sustained-8k-18] OK: prompt=5993tok gen=256tok
+[19:53:52]   [sustained-8k-18] prompt_speed=70831.7tok/s gen_speed=12.4tok/s wall=21013ms
+[19:53:52]   [sustained-8k-18] VRAM delta: 0MB
+[19:53:52]   [sustained-8k-18] >>> 
+[19:53:54] 
+[19:53:54] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:53:54]   Generated corpus: 4501 words
+[19:54:15]   [sustained-8k-19] OK: prompt=5993tok gen=256tok
+[19:54:15]   [sustained-8k-19] prompt_speed=71134.4tok/s gen_speed=12.4tok/s wall=21016ms
+[19:54:15]   [sustained-8k-19] VRAM delta: 0MB
+[19:54:15]   [sustained-8k-19] >>> 
+[19:54:17] 
+[19:54:17] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:54:17]   Generated corpus: 4501 words
+[19:54:39]   [sustained-8k-20] OK: prompt=5993tok gen=256tok
+[19:54:39]   [sustained-8k-20] prompt_speed=70851.0tok/s gen_speed=12.4tok/s wall=21009ms
+[19:54:39]   [sustained-8k-20] VRAM delta: 0MB
+[19:54:39]   [sustained-8k-20] >>> 
+[19:54:41] 
+[19:54:41] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:54:41]   Generated corpus: 4501 words
+[19:55:02]   [sustained-8k-21] OK: prompt=5993tok gen=256tok
+[19:55:02]   [sustained-8k-21] prompt_speed=70976.0tok/s gen_speed=12.4tok/s wall=21023ms
+[19:55:02]   [sustained-8k-21] VRAM delta: 0MB
+[19:55:02]   [sustained-8k-21] >>> 
+[19:55:04] 
+[19:55:04] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:55:04]   Generated corpus: 4501 words
+[19:55:25]   [sustained-8k-22] OK: prompt=5993tok gen=256tok
+[19:55:25]   [sustained-8k-22] prompt_speed=70808.3tok/s gen_speed=12.4tok/s wall=21025ms
+[19:55:25]   [sustained-8k-22] VRAM delta: 0MB
+[19:55:25]   [sustained-8k-22] >>> 
+[19:55:27] 
+[19:55:27] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:55:27]   Generated corpus: 4501 words
+[19:55:48]   [sustained-8k-23] OK: prompt=5993tok gen=256tok
+[19:55:48]   [sustained-8k-23] prompt_speed=70886.2tok/s gen_speed=12.4tok/s wall=21017ms
+[19:55:48]   [sustained-8k-23] VRAM delta: 0MB
+[19:55:48]   [sustained-8k-23] >>> 
+[19:55:50] 
+[19:55:50] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:55:50]   Generated corpus: 4501 words
+[19:56:11]   [sustained-8k-24] OK: prompt=5993tok gen=256tok
+[19:56:11]   [sustained-8k-24] prompt_speed=71153.0tok/s gen_speed=12.4tok/s wall=21015ms
+[19:56:11]   [sustained-8k-24] VRAM delta: 0MB
+[19:56:11]   [sustained-8k-24] >>> 
+[19:56:13] 
+[19:56:13] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:56:13]   Generated corpus: 4501 words
+[19:56:35]   [sustained-8k-25] OK: prompt=5993tok gen=256tok
+[19:56:35]   [sustained-8k-25] prompt_speed=70923.1tok/s gen_speed=12.4tok/s wall=21020ms
+[19:56:35]   [sustained-8k-25] VRAM delta: 0MB
+[19:56:35]   [sustained-8k-25] >>> 
+[19:56:37] 
+[19:56:37] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:56:37]   Generated corpus: 4501 words
+[19:56:58]   [sustained-8k-26] OK: prompt=5993tok gen=256tok
+[19:56:58]   [sustained-8k-26] prompt_speed=70869.4tok/s gen_speed=12.4tok/s wall=21020ms
+[19:56:58]   [sustained-8k-26] VRAM delta: 0MB
+[19:56:58]   [sustained-8k-26] >>> 
+[19:57:00] 
+[19:57:00] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:57:00]   Generated corpus: 4501 words
+[19:57:21]   [sustained-8k-27] OK: prompt=5993tok gen=256tok
+[19:57:21]   [sustained-8k-27] prompt_speed=70895.4tok/s gen_speed=12.4tok/s wall=21009ms
+[19:57:21]   [sustained-8k-27] VRAM delta: 0MB
+[19:57:21]   [sustained-8k-27] >>> 
+[19:57:23] 
+[19:57:23] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:57:23]   Generated corpus: 4501 words
+[19:57:44]   [sustained-8k-28] OK: prompt=5993tok gen=256tok
+[19:57:44]   [sustained-8k-28] prompt_speed=70976.8tok/s gen_speed=12.4tok/s wall=21022ms
+[19:57:44]   [sustained-8k-28] VRAM delta: 0MB
+[19:57:44]   [sustained-8k-28] >>> 
+[19:57:46] 
+[19:57:46] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:57:46]   Generated corpus: 4501 words
+[19:58:07]   [sustained-8k-29] OK: prompt=5993tok gen=256tok
+[19:58:07]   [sustained-8k-29] prompt_speed=71052.6tok/s gen_speed=12.4tok/s wall=21013ms
+[19:58:07]   [sustained-8k-29] VRAM delta: 0MB
+[19:58:07]   [sustained-8k-29] >>> 
+[19:58:09] 
+[19:58:09] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:58:09]   Generated corpus: 4501 words
+[19:58:31]   [sustained-8k-30] OK: prompt=5993tok gen=256tok
+[19:58:31]   [sustained-8k-30] prompt_speed=70880.3tok/s gen_speed=12.4tok/s wall=21021ms
+[19:58:31]   [sustained-8k-30] VRAM delta: 0MB
+[19:58:31]   [sustained-8k-30] >>> 
+[19:58:33] 
+[19:58:33] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:58:33]   Generated corpus: 4501 words
+[19:58:54]   [sustained-8k-31] OK: prompt=5993tok gen=256tok
+[19:58:54]   [sustained-8k-31] prompt_speed=71002.1tok/s gen_speed=12.4tok/s wall=21026ms
+[19:58:54]   [sustained-8k-31] VRAM delta: 0MB
+[19:58:54]   [sustained-8k-31] >>> 
+[19:58:56] 
+[19:58:56] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:58:56]   Generated corpus: 4501 words
+[19:59:17]   [sustained-8k-32] OK: prompt=5993tok gen=256tok
+[19:59:17]   [sustained-8k-32] prompt_speed=70734.7tok/s gen_speed=12.4tok/s wall=21022ms
+[19:59:17]   [sustained-8k-32] VRAM delta: 0MB
+[19:59:17]   [sustained-8k-32] >>> 
+[19:59:19] 
+[19:59:19] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:59:19]   Generated corpus: 4501 words
+[19:59:40]   [sustained-8k-33] OK: prompt=5993tok gen=256tok
+[19:59:40]   [sustained-8k-33] prompt_speed=70915.5tok/s gen_speed=12.4tok/s wall=21013ms
+[19:59:40]   [sustained-8k-33] VRAM delta: 0MB
+[19:59:40]   [sustained-8k-33] >>> 
+[19:59:42] 
+[19:59:42] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[19:59:42]   Generated corpus: 4501 words
+[20:00:03]   [sustained-8k-34] OK: prompt=5993tok gen=256tok
+[20:00:03]   [sustained-8k-34] prompt_speed=70654.7tok/s gen_speed=12.4tok/s wall=21013ms
+[20:00:03]   [sustained-8k-34] VRAM delta: 0MB
+[20:00:03]   [sustained-8k-34] >>> 
+[20:00:05] 
+[20:00:05] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:00:05]   Generated corpus: 4501 words
+[20:00:27]   [sustained-8k-35] OK: prompt=5993tok gen=256tok
+[20:00:27]   [sustained-8k-35] prompt_speed=70887.8tok/s gen_speed=12.4tok/s wall=21019ms
+[20:00:27]   [sustained-8k-35] VRAM delta: 0MB
+[20:00:27]   [sustained-8k-35] >>> 
+[20:00:29] 
+[20:00:29] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:00:29]   Generated corpus: 4501 words
+[20:00:50]   [sustained-8k-36] OK: prompt=5993tok gen=256tok
+[20:00:50]   [sustained-8k-36] prompt_speed=70902.9tok/s gen_speed=12.4tok/s wall=21014ms
+[20:00:50]   [sustained-8k-36] VRAM delta: 0MB
+[20:00:50]   [sustained-8k-36] >>> 
+[20:00:52] 
+[20:00:52] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:00:52]   Generated corpus: 4501 words
+[20:01:13]   [sustained-8k-37] OK: prompt=5993tok gen=256tok
+[20:01:13]   [sustained-8k-37] prompt_speed=71039.1tok/s gen_speed=12.4tok/s wall=21015ms
+[20:01:13]   [sustained-8k-37] VRAM delta: 0MB
+[20:01:13]   [sustained-8k-37] >>> 
+[20:01:15] 
+[20:01:15] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:01:15]   Generated corpus: 4501 words
+[20:01:36]   [sustained-8k-38] OK: prompt=5993tok gen=256tok
+[20:01:36]   [sustained-8k-38] prompt_speed=71029.8tok/s gen_speed=12.4tok/s wall=21012ms
+[20:01:36]   [sustained-8k-38] VRAM delta: 0MB
+[20:01:36]   [sustained-8k-38] >>> 
+[20:01:38] 
+[20:01:38] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:01:38]   Generated corpus: 4501 words
+[20:01:59]   [sustained-8k-39] OK: prompt=5993tok gen=256tok
+[20:01:59]   [sustained-8k-39] prompt_speed=71129.3tok/s gen_speed=12.4tok/s wall=21000ms
+[20:01:59]   [sustained-8k-39] VRAM delta: 0MB
+[20:01:59]   [sustained-8k-39] >>> 
+[20:02:01] 
+[20:02:01] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:02:01]   Generated corpus: 4501 words
+[20:02:23]   [sustained-8k-40] OK: prompt=5993tok gen=256tok
+[20:02:23]   [sustained-8k-40] prompt_speed=70757.3tok/s gen_speed=12.4tok/s wall=21019ms
+[20:02:23]   [sustained-8k-40] VRAM delta: 0MB
+[20:02:23]   [sustained-8k-40] >>> 
+[20:02:25] 
+[20:02:25] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:02:25]   Generated corpus: 4501 words
+[20:02:46]   [sustained-8k-41] OK: prompt=5993tok gen=256tok
+[20:02:46]   [sustained-8k-41] prompt_speed=71006.3tok/s gen_speed=12.4tok/s wall=21024ms
+[20:02:46]   [sustained-8k-41] VRAM delta: 0MB
+[20:02:46]   [sustained-8k-41] >>> 
+[20:02:48] 
+[20:02:48] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:02:48]   Generated corpus: 4501 words
+[20:03:09]   [sustained-8k-42] OK: prompt=5993tok gen=256tok
+[20:03:09]   [sustained-8k-42] prompt_speed=70991.1tok/s gen_speed=12.4tok/s wall=21021ms
+[20:03:09]   [sustained-8k-42] VRAM delta: 0MB
+[20:03:09]   [sustained-8k-42] >>> 
+[20:03:11] 
+[20:03:11] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:03:11]   Generated corpus: 4501 words
+[20:03:32]   [sustained-8k-43] OK: prompt=5993tok gen=256tok
+[20:03:32]   [sustained-8k-43] prompt_speed=70799.1tok/s gen_speed=12.4tok/s wall=21009ms
+[20:03:32]   [sustained-8k-43] VRAM delta: 0MB
+[20:03:32]   [sustained-8k-43] >>> 
+[20:03:34] 
+[20:03:34] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:03:34]   Generated corpus: 4501 words
+[20:03:55]   [sustained-8k-44] OK: prompt=5993tok gen=256tok
+[20:03:55]   [sustained-8k-44] prompt_speed=71077.8tok/s gen_speed=12.4tok/s wall=21020ms
+[20:03:55]   [sustained-8k-44] VRAM delta: 0MB
+[20:03:55]   [sustained-8k-44] >>> 
+[20:03:57] 
+[20:03:57] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:03:57]   Generated corpus: 4501 words
+[20:04:19]   [sustained-8k-45] OK: prompt=5993tok gen=256tok
+[20:04:19]   [sustained-8k-45] prompt_speed=71104.8tok/s gen_speed=12.4tok/s wall=21028ms
+[20:04:19]   [sustained-8k-45] VRAM delta: 0MB
+[20:04:19]   [sustained-8k-45] >>> 
+[20:04:21] 
+[20:04:21] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:04:21]   Generated corpus: 4501 words
+[20:04:42]   [sustained-8k-46] OK: prompt=5993tok gen=256tok
+[20:04:42]   [sustained-8k-46] prompt_speed=71105.7tok/s gen_speed=12.4tok/s wall=21018ms
+[20:04:42]   [sustained-8k-46] VRAM delta: 0MB
+[20:04:42]   [sustained-8k-46] >>> 
+[20:04:44] 
+[20:04:44] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:04:44]   Generated corpus: 4501 words
+[20:05:05]   [sustained-8k-47] OK: prompt=5993tok gen=256tok
+[20:05:05]   [sustained-8k-47] prompt_speed=70880.3tok/s gen_speed=12.4tok/s wall=21020ms
+[20:05:05]   [sustained-8k-47] VRAM delta: 0MB
+[20:05:05]   [sustained-8k-47] >>> 
+[20:05:07] 
+[20:05:07] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:05:07]   Generated corpus: 4501 words
+[20:05:28]   [sustained-8k-48] OK: prompt=5993tok gen=256tok
+[20:05:28]   [sustained-8k-48] prompt_speed=70800.7tok/s gen_speed=12.4tok/s wall=21034ms
+[20:05:28]   [sustained-8k-48] VRAM delta: 0MB
+[20:05:28]   [sustained-8k-48] >>> 
+[20:05:30] 
+[20:05:30] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:05:30]   Generated corpus: 4501 words
+[20:05:51]   [sustained-8k-49] OK: prompt=5993tok gen=256tok
+[20:05:51]   [sustained-8k-49] prompt_speed=71011.3tok/s gen_speed=12.4tok/s wall=21013ms
+[20:05:51]   [sustained-8k-49] VRAM delta: 0MB
+[20:05:51]   [sustained-8k-49] >>> 
+[20:05:53] 
+[20:05:53] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:05:53]   Generated corpus: 4501 words
+[20:06:15]   [sustained-8k-50] OK: prompt=5993tok gen=256tok
+[20:06:15]   [sustained-8k-50] prompt_speed=71055.9tok/s gen_speed=12.4tok/s wall=21003ms
+[20:06:15]   [sustained-8k-50] VRAM delta: 0MB
+[20:06:15]   [sustained-8k-50] >>> 
+[20:06:17] 
+[20:06:17] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:06:17]   Generated corpus: 4501 words
+[20:06:38]   [sustained-8k-51] OK: prompt=5993tok gen=256tok
+[20:06:38]   [sustained-8k-51] prompt_speed=70983.6tok/s gen_speed=12.4tok/s wall=21022ms
+[20:06:38]   [sustained-8k-51] VRAM delta: 0MB
+[20:06:38]   [sustained-8k-51] >>> 
+[20:06:40] 
+[20:06:40] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:06:40]   Generated corpus: 4501 words
+[20:07:01]   [sustained-8k-52] OK: prompt=5993tok gen=256tok
+[20:07:01]   [sustained-8k-52] prompt_speed=70999.5tok/s gen_speed=12.4tok/s wall=21013ms
+[20:07:01]   [sustained-8k-52] VRAM delta: 0MB
+[20:07:01]   [sustained-8k-52] >>> 
+[20:07:03] 
+[20:07:03] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:07:03]   Generated corpus: 4501 words
+[20:07:24]   [sustained-8k-53] OK: prompt=5993tok gen=256tok
+[20:07:24]   [sustained-8k-53] prompt_speed=71169.0tok/s gen_speed=12.4tok/s wall=21032ms
+[20:07:24]   [sustained-8k-53] VRAM delta: 0MB
+[20:07:24]   [sustained-8k-53] >>> 
+[20:07:26] 
+[20:07:26] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:07:26]   Generated corpus: 4501 words
+[20:07:47]   [sustained-8k-54] OK: prompt=5993tok gen=256tok
+[20:07:47]   [sustained-8k-54] prompt_speed=71008.8tok/s gen_speed=12.4tok/s wall=21023ms
+[20:07:47]   [sustained-8k-54] VRAM delta: 0MB
+[20:07:47]   [sustained-8k-54] >>> 
+[20:07:49] 
+[20:07:49] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:07:50]   Generated corpus: 4501 words
+[20:08:11]   [sustained-8k-55] OK: prompt=5993tok gen=256tok
+[20:08:11]   [sustained-8k-55] prompt_speed=71077.0tok/s gen_speed=12.4tok/s wall=21018ms
+[20:08:11]   [sustained-8k-55] VRAM delta: 0MB
+[20:08:11]   [sustained-8k-55] >>> 
+[20:08:13] 
+[20:08:13] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:08:13]   Generated corpus: 4501 words
+[20:08:34]   [sustained-8k-56] OK: prompt=5993tok gen=256tok
+[20:08:34]   [sustained-8k-56] prompt_speed=71011.3tok/s gen_speed=12.4tok/s wall=21012ms
+[20:08:34]   [sustained-8k-56] VRAM delta: 0MB
+[20:08:34]   [sustained-8k-56] >>> 
+[20:08:36] 
+[20:08:36] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:08:36]   Generated corpus: 4501 words
+[20:08:57]   [sustained-8k-57] OK: prompt=5993tok gen=256tok
+[20:08:57]   [sustained-8k-57] prompt_speed=70976.0tok/s gen_speed=12.4tok/s wall=21012ms
+[20:08:57]   [sustained-8k-57] VRAM delta: 0MB
+[20:08:57]   [sustained-8k-57] >>> 
+[20:08:59] 
+[20:08:59] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:08:59]   Generated corpus: 4501 words
+[20:09:20]   [sustained-8k-58] OK: prompt=5993tok gen=256tok
+[20:09:20]   [sustained-8k-58] prompt_speed=71054.3tok/s gen_speed=12.4tok/s wall=21014ms
+[20:09:20]   [sustained-8k-58] VRAM delta: 0MB
+[20:09:20]   [sustained-8k-58] >>> 
+[20:09:22] 
+[20:09:22] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:09:22]   Generated corpus: 4501 words
+[20:09:43]   [sustained-8k-59] OK: prompt=5993tok gen=256tok
+[20:09:43]   [sustained-8k-59] prompt_speed=70978.5tok/s gen_speed=12.4tok/s wall=21008ms
+[20:09:43]   [sustained-8k-59] VRAM delta: 0MB
+[20:09:43]   [sustained-8k-59] >>> 
+[20:09:45] 
+[20:09:45] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:09:45]   Generated corpus: 4501 words
+[20:10:07]   [sustained-8k-60] OK: prompt=5993tok gen=256tok
+[20:10:07]   [sustained-8k-60] prompt_speed=71095.6tok/s gen_speed=12.4tok/s wall=21006ms
+[20:10:07]   [sustained-8k-60] VRAM delta: 0MB
+[20:10:07]   [sustained-8k-60] >>> 
+[20:10:09] 
+[20:10:09] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:10:09]   Generated corpus: 4501 words
+[20:10:30]   [sustained-8k-61] OK: prompt=5993tok gen=256tok
+[20:10:30]   [sustained-8k-61] prompt_speed=71272.3tok/s gen_speed=12.4tok/s wall=21013ms
+[20:10:30]   [sustained-8k-61] VRAM delta: 0MB
+[20:10:30]   [sustained-8k-61] >>> 
+[20:10:32] 
+[20:10:32] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:10:32]   Generated corpus: 4501 words
+[20:10:53]   [sustained-8k-62] OK: prompt=5993tok gen=256tok
+[20:10:53]   [sustained-8k-62] prompt_speed=71035.7tok/s gen_speed=12.4tok/s wall=21014ms
+[20:10:53]   [sustained-8k-62] VRAM delta: 0MB
+[20:10:53]   [sustained-8k-62] >>> 
+[20:10:55] 
+[20:10:55] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:10:55]   Generated corpus: 4501 words
+[20:11:16]   [sustained-8k-63] OK: prompt=5993tok gen=256tok
+[20:11:16]   [sustained-8k-63] prompt_speed=71115.0tok/s gen_speed=12.4tok/s wall=21009ms
+[20:11:16]   [sustained-8k-63] VRAM delta: 0MB
+[20:11:16]   [sustained-8k-63] >>> 
+[20:11:18] 
+[20:11:18] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:11:18]   Generated corpus: 4501 words
+[20:11:39]   [sustained-8k-64] OK: prompt=5993tok gen=256tok
+[20:11:39]   [sustained-8k-64] prompt_speed=70841.8tok/s gen_speed=12.4tok/s wall=21004ms
+[20:11:39]   [sustained-8k-64] VRAM delta: 0MB
+[20:11:39]   [sustained-8k-64] >>> 
+[20:11:41] 
+[20:11:41] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:11:41]   Generated corpus: 4501 words
+[20:12:03]   [sustained-8k-65] OK: prompt=5993tok gen=256tok
+[20:12:03]   [sustained-8k-65] prompt_speed=71024.8tok/s gen_speed=12.4tok/s wall=21022ms
+[20:12:03]   [sustained-8k-65] VRAM delta: 0MB
+[20:12:03]   [sustained-8k-65] >>> 
+[20:12:05] 
+[20:12:05] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:12:05]   Generated corpus: 4501 words
+[20:12:26]   [sustained-8k-66] OK: prompt=5993tok gen=256tok
+[20:12:26]   [sustained-8k-66] prompt_speed=70956.7tok/s gen_speed=12.4tok/s wall=21012ms
+[20:12:26]   [sustained-8k-66] VRAM delta: 0MB
+[20:12:26]   [sustained-8k-66] >>> 
+[20:12:28] 
+[20:12:28] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:12:28]   Generated corpus: 4501 words
+[20:12:49]   [sustained-8k-67] OK: prompt=5993tok gen=256tok
+[20:12:49]   [sustained-8k-67] prompt_speed=70733.9tok/s gen_speed=12.4tok/s wall=21010ms
+[20:12:49]   [sustained-8k-67] VRAM delta: 0MB
+[20:12:49]   [sustained-8k-67] >>> 
+[20:12:51] 
+[20:12:51] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:12:51]   Generated corpus: 4501 words
+[20:13:12]   [sustained-8k-68] OK: prompt=5993tok gen=256tok
+[20:13:12]   [sustained-8k-68] prompt_speed=70904.6tok/s gen_speed=12.4tok/s wall=21025ms
+[20:13:12]   [sustained-8k-68] VRAM delta: 0MB
+[20:13:12]   [sustained-8k-68] >>> 
+[20:13:14] 
+[20:13:14] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:13:14]   Generated corpus: 4501 words
+[20:13:35]   [sustained-8k-69] OK: prompt=5993tok gen=256tok
+[20:13:35]   [sustained-8k-69] prompt_speed=70819.2tok/s gen_speed=12.4tok/s wall=21025ms
+[20:13:35]   [sustained-8k-69] VRAM delta: 0MB
+[20:13:35]   [sustained-8k-69] >>> 
+[20:13:37] 
+[20:13:37] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:13:37]   Generated corpus: 4501 words
+[20:13:59]   [sustained-8k-70] OK: prompt=5993tok gen=256tok
+[20:13:59]   [sustained-8k-70] prompt_speed=70965.1tok/s gen_speed=12.4tok/s wall=21015ms
+[20:13:59]   [sustained-8k-70] VRAM delta: 0MB
+[20:13:59]   [sustained-8k-70] >>> 
+[20:14:01] 
+[20:14:01] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:14:01]   Generated corpus: 4501 words
+[20:14:22]   [sustained-8k-71] OK: prompt=5993tok gen=256tok
+[20:14:22]   [sustained-8k-71] prompt_speed=70981.9tok/s gen_speed=12.4tok/s wall=21021ms
+[20:14:22]   [sustained-8k-71] VRAM delta: 0MB
+[20:14:22]   [sustained-8k-71] >>> 
+[20:14:24] 
+[20:14:24] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:14:24]   Generated corpus: 4501 words
+[20:14:45]   [sustained-8k-72] OK: prompt=5993tok gen=256tok
+[20:14:45]   [sustained-8k-72] prompt_speed=70794.1tok/s gen_speed=12.4tok/s wall=21005ms
+[20:14:45]   [sustained-8k-72] VRAM delta: 0MB
+[20:14:45]   [sustained-8k-72] >>> 
+[20:14:47] 
+[20:14:47] --- Context test: ~8000 tokens (num_ctx=16384) ---
+[20:14:47]   Generated corpus: 4501 words
+[20:15:08]   [sustained-8k-73] OK: prompt=5993tok gen=256tok
+[20:15:08]   [sustained-8k-73] prompt_speed=71053.4tok/s gen_speed=12.4tok/s wall=21027ms
+[20:15:08]   [sustained-8k-73] VRAM delta: 0MB
+[20:15:08]   [sustained-8k-73] >>> 
+[20:15:10] 
+[20:15:10] Sustained long-context complete: 73 iterations in 1803s, 0 failures
+[20:15:10] 
+[20:15:10] === POST-TEST HEALTH ===
+[20:15:10]   RAM: 2.4Gi used, 13Gi available
+[20:15:10]   VRAM: 12172472320
+[20:15:10]   GPU errors: 0
+0
+[20:15:10]   Ollama: active
+[20:15:10]   Uptime: up 1 day, 1 hour, 31 minutes
+[20:15:10] 
+[20:15:10] ==========================================
+[20:15:10] CONTEXT TEST COMPLETE
+[20:15:10] Finished: Mon Jul 13 20:15:10 CDT 2026
+[20:15:10] ==========================================

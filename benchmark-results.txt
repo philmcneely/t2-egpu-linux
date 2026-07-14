@@ -1,0 +1,525 @@
+[18:20:27] ==========================================
+[18:20:27] Mac Mini T2 eGPU — 14B Inference Test Suite
+[18:20:27] Started: Mon Jul 13 18:20:27 CDT 2026
+[18:20:27] ==========================================
+[18:20:27] 
+[18:20:27] === PRE-FLIGHT ===
+[18:20:27]   RAM: 
+[18:20:27]   Disk: 
+[18:20:27]   Uptime: up 23 hours, 37 minutes
+[18:20:27]   Ollama: active
+[18:20:27]   GPU errors in dmesg: 0
+0
+[18:20:27]   VRAM used: 9949708288
+[18:20:27]   VRAM total: 17163091968
+[18:20:27] 
+[18:20:27] === TEST 1: COLD START ===
+[18:20:32] Model unloaded. Cold-starting qwen3:14b-q4_K_M...
+[18:20:36]   [cold-start] OK: gen=32tok prompt=22tok 15.8tok/s load=1.38s
+[18:20:36]   [cold-start] >>> 
+[18:20:36] 
+[18:20:36] === TEST 2: WARM PERFORMANCE (20 runs) ===
+[18:21:14]   [warm-1] OK: gen=256tok prompt=24tok 15.5tok/s load=0.23s
+[18:21:14]   [warm-1] >>> 
+[18:21:32]   [warm-2] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:21:32]   [warm-2] >>> 
+[18:21:50]   [warm-3] OK: gen=256tok prompt=17tok 15.5tok/s load=0.21s
+[18:21:50]   [warm-3] >>> 
+[18:22:09]   [warm-4] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:22:09]   [warm-4] >>> 
+[18:22:27]   [warm-5] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:22:27]   [warm-5] >>> 
+[18:22:45]   [warm-6] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:22:45]   [warm-6] >>> 
+[18:23:03]   [warm-7] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:23:03]   [warm-7] >>> 
+[18:23:21]   [warm-8] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:23:21]   [warm-8] >>> 
+[18:23:39]   [warm-9] OK: gen=256tok prompt=22tok 15.5tok/s load=0.20s
+[18:23:39]   [warm-9] >>> 
+[18:23:58]   [warm-10] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:23:58]   [warm-10] >>> 
+[18:24:16]   [warm-11] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:24:16]   [warm-11] >>> 
+[18:24:34]   [warm-12] OK: gen=256tok prompt=20tok 15.4tok/s load=0.20s
+[18:24:34]   [warm-12] >>> 
+[18:24:52]   [warm-13] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:24:52]   [warm-13] >>> 
+[18:25:10]   [warm-14] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:25:10]   [warm-14] >>> 
+[18:25:28]   [warm-15] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[18:25:28]   [warm-15] >>> 
+[18:25:47]   [warm-16] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:25:47]   [warm-16] >>> 
+[18:26:05]   [warm-17] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:26:05]   [warm-17] >>> 
+[18:26:23]   [warm-18] OK: gen=256tok prompt=20tok 15.4tok/s load=0.20s
+[18:26:23]   [warm-18] >>> 
+[18:26:41]   [warm-19] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[18:26:41]   [warm-19] >>> 
+[18:26:59]   [warm-20] OK: gen=256tok prompt=22tok 15.4tok/s load=0.20s
+[18:26:59]   [warm-20] >>> 
+[18:27:00] 
+[18:27:00] === TEST 3: CONTEXT LENGTH STRESS ===
+[18:27:00]   Context test: ~500 words input
+[18:27:13]   [ctx-500w] OK: gen=128tok prompt=537tok 15.2tok/s load=0.20s
+[18:27:13]   [ctx-500w] >>> 
+[18:27:15]   Context test: ~1000 words input
+[18:27:28]   [ctx-1000w] OK: gen=128tok prompt=1037tok 14.9tok/s load=0.20s
+[18:27:28]   [ctx-1000w] >>> 
+[18:27:30]   Context test: ~2000 words input
+[18:27:47]   [ctx-2000w] OK: gen=128tok prompt=2037tok 14.4tok/s load=0.21s
+[18:27:47]   [ctx-2000w] >>> 
+[18:27:49]   Context test: ~4000 words input
+[18:28:14]   [ctx-4000w] OK: gen=128tok prompt=4037tok 13.4tok/s load=0.20s
+[18:28:14]   [ctx-4000w] >>> 
+[18:28:17]   Context test: ~8000 words input
+[18:28:41]   [ctx-8000w] OK: gen=128tok prompt=2050tok 14.4tok/s load=0.20s
+[18:28:41]   [ctx-8000w] >>> 
+[18:28:43]   Context test: ~16000 words input
+[18:28:52]   [ctx-16000w] OK: gen=128tok prompt=2050tok 14.4tok/s load=0.21s
+[18:28:52]   [ctx-16000w] >>> 
+[18:28:54] 
+[18:28:54]   Post-context RAM: 
+[18:28:54]   Post-context VRAM: 9973723136
+[18:28:54] 
+[18:28:54] === TEST 4: QUALITY / REASONING ===
+[18:29:29]   [reason-widgets] OK: gen=512tok prompt=48tok 15.3tok/s load=0.21s
+[18:29:29]   [reason-widgets] >>> 
+[18:29:47]   [reason-sheep] OK: gen=256tok prompt=34tok 15.4tok/s load=0.21s
+[18:29:47]   [reason-sheep] >>> 
+[18:30:21]   [code-linkedlist] OK: gen=512tok prompt=29tok 15.3tok/s load=0.21s
+[18:30:21]   [code-linkedlist] >>> 
+[18:30:55]   [reason-jugs] OK: gen=512tok prompt=41tok 15.3tok/s load=0.20s
+[18:30:55]   [reason-jugs] >>> 
+[18:31:12]   [code-sql-debug] OK: gen=256tok prompt=37tok 15.4tok/s load=0.21s
+[18:31:12]   [code-sql-debug] >>> 
+[18:31:30]   [translate-roundtrip] OK: gen=256tok prompt=34tok 15.4tok/s load=0.20s
+[18:31:30]   [translate-roundtrip] >>> 
+[18:31:30] 
+[18:31:30] === TEST 5: SUSTAINED LOAD (60 min, qwen3:14b-q4_K_M) ===
+[18:31:47]   [stress-1] OK: gen=256tok prompt=19tok 15.4tok/s load=0.20s
+[18:31:47]   [stress-1] >>> 
+[18:32:05]   [stress-2] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:32:05]   [stress-2] >>> 
+[18:32:23]   [stress-3] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:32:23]   [stress-3] >>> 
+[18:32:41]   [stress-4] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:32:41]   [stress-4] >>> 
+[18:33:00]   [stress-5] OK: gen=256tok prompt=17tok 15.4tok/s load=0.20s
+[18:33:00]   [stress-5] >>> 
+[18:33:18]   [stress-6] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:33:18]   [stress-6] >>> 
+[18:33:36]   [stress-7] OK: gen=256tok prompt=15tok 15.4tok/s load=0.21s
+[18:33:36]   [stress-7] >>> 
+[18:33:54]   [stress-8] OK: gen=256tok prompt=15tok 15.4tok/s load=0.20s
+[18:33:54]   [stress-8] >>> 
+[18:34:12]   [stress-9] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:34:12]   [stress-9] >>> 
+[18:34:31]   [stress-10] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:34:31]   [stress-10] >>> 
+[18:34:49]   [stress-11] OK: gen=256tok prompt=21tok 15.4tok/s load=0.20s
+[18:34:49]   [stress-11] >>> 
+[18:35:07]   [stress-12] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:35:07]   [stress-12] >>> 
+[18:35:25]   [stress-13] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:35:25]   [stress-13] >>> 
+[18:35:43]   [stress-14] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:35:43]   [stress-14] >>> 
+[18:36:02]   [stress-15] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:36:02]   [stress-15] >>> 
+[18:36:20]   [stress-16] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:36:20]   [stress-16] >>> 
+[18:36:38]   [stress-17] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:36:38]   [stress-17] >>> 
+[18:36:56]   [stress-18] OK: gen=256tok prompt=16tok 15.5tok/s load=0.21s
+[18:36:56]   [stress-18] >>> 
+[18:37:14]   [stress-19] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:37:14]   [stress-19] >>> 
+[18:37:32]   [stress-20] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:37:32]   [stress-20] >>> 
+[18:37:51]   [stress-21] OK: gen=256tok prompt=15tok 15.4tok/s load=0.20s
+[18:37:51]   [stress-21] >>> 
+[18:38:09]   [stress-22] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:38:09]   [stress-22] >>> 
+[18:38:27]   [stress-23] OK: gen=256tok prompt=15tok 15.4tok/s load=0.20s
+[18:38:27]   [stress-23] >>> 
+[18:38:45]   [stress-24] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:38:45]   [stress-24] >>> 
+[18:39:03]   [stress-25] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:39:03]   [stress-25] >>> 
+[18:39:22]   [stress-26] OK: gen=256tok prompt=21tok 15.4tok/s load=0.20s
+[18:39:22]   [stress-26] >>> 
+[18:39:40]   [stress-27] OK: gen=256tok prompt=18tok 15.5tok/s load=0.19s
+[18:39:40]   [stress-27] >>> 
+[18:39:58]   [stress-28] OK: gen=256tok prompt=20tok 15.4tok/s load=0.19s
+[18:39:58]   [stress-28] >>> 
+[18:40:16]   [stress-29] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:40:16]   [stress-29] >>> 
+[18:40:34]   [stress-30] OK: gen=256tok prompt=19tok 15.4tok/s load=0.20s
+[18:40:34]   [stress-30] >>> 
+[18:40:52]   [stress-31] OK: gen=256tok prompt=19tok 15.4tok/s load=0.20s
+[18:40:52]   [stress-31] >>> 
+[18:41:11]   [stress-32] OK: gen=256tok prompt=16tok 15.4tok/s load=0.20s
+[18:41:11]   [stress-32] >>> 
+[18:41:29]   [stress-33] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:41:29]   [stress-33] >>> 
+[18:41:47]   [stress-34] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:41:47]   [stress-34] >>> 
+[18:42:05]   [stress-35] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:42:05]   [stress-35] >>> 
+[18:42:23]   [stress-36] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:42:23]   [stress-36] >>> 
+[18:42:41]   [stress-37] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:42:41]   [stress-37] >>> 
+[18:43:00]   [stress-38] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:43:00]   [stress-38] >>> 
+[18:43:18]   [stress-39] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:43:18]   [stress-39] >>> 
+[18:43:36]   [stress-40] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:43:36]   [stress-40] >>> 
+[18:43:54]   [stress-41] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[18:43:54]   [stress-41] >>> 
+[18:44:12]   [stress-42] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:44:12]   [stress-42] >>> 
+[18:44:31]   [stress-43] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:44:31]   [stress-43] >>> 
+[18:44:49]   [stress-44] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:44:49]   [stress-44] >>> 
+[18:45:07]   [stress-45] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:45:07]   [stress-45] >>> 
+[18:45:25]   [stress-46] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:45:25]   [stress-46] >>> 
+[18:45:43]   [stress-47] OK: gen=256tok prompt=16tok 15.4tok/s load=0.20s
+[18:45:43]   [stress-47] >>> 
+[18:46:01]   [stress-48] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:46:01]   [stress-48] >>> 
+[18:46:20]   [stress-49] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:46:20]   [stress-49] >>> 
+[18:46:38]   [stress-50] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:46:38]   [stress-50] >>> 
+[18:46:56]   [stress-51] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:46:56]   [stress-51] >>> 
+[18:47:14]   [stress-52] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:47:14]   [stress-52] >>> 
+[18:47:32]   [stress-53] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:47:32]   [stress-53] >>> 
+[18:47:50]   [stress-54] OK: gen=256tok prompt=20tok 15.4tok/s load=0.19s
+[18:47:50]   [stress-54] >>> 
+[18:48:09]   [stress-55] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:48:09]   [stress-55] >>> 
+[18:48:27]   [stress-56] OK: gen=256tok prompt=21tok 15.4tok/s load=0.20s
+[18:48:27]   [stress-56] >>> 
+[18:48:45]   [stress-57] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:48:45]   [stress-57] >>> 
+[18:49:03]   [stress-58] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:49:03]   [stress-58] >>> 
+[18:49:21]   [stress-59] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:49:21]   [stress-59] >>> 
+[18:49:39]   [stress-60] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:49:39]   [stress-60] >>> 
+[18:49:58]   [stress-61] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:49:58]   [stress-61] >>> 
+[18:50:16]   [stress-62] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:50:16]   [stress-62] >>> 
+[18:50:34]   [stress-63] OK: gen=256tok prompt=16tok 15.4tok/s load=0.20s
+[18:50:34]   [stress-63] >>> 
+[18:50:52]   [stress-64] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:50:52]   [stress-64] >>> 
+[18:51:10]   [stress-65] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:51:10]   [stress-65] >>> 
+[18:51:29]   [stress-66] OK: gen=256tok prompt=15tok 15.4tok/s load=0.20s
+[18:51:29]   [stress-66] >>> 
+[18:51:47]   [stress-67] OK: gen=256tok prompt=15tok 15.5tok/s load=0.19s
+[18:51:47]   [stress-67] >>> 
+[18:52:05]   [stress-68] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:52:05]   [stress-68] >>> 
+[18:52:23]   [stress-69] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:52:23]   [stress-69] >>> 
+[18:52:41]   [stress-70] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:52:41]   [stress-70] >>> 
+[18:52:59]   [stress-71] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[18:52:59]   [stress-71] >>> 
+[18:53:18]   [stress-72] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:53:18]   [stress-72] >>> 
+[18:53:36]   [stress-73] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[18:53:36]   [stress-73] >>> 
+[18:53:54]   [stress-74] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[18:53:54]   [stress-74] >>> 
+[18:54:12]   [stress-75] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:54:12]   [stress-75] >>> 
+[18:54:30]   [stress-76] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:54:30]   [stress-76] >>> 
+[18:54:48]   [stress-77] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:54:48]   [stress-77] >>> 
+[18:55:07]   [stress-78] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:55:07]   [stress-78] >>> 
+[18:55:25]   [stress-79] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:55:25]   [stress-79] >>> 
+[18:55:43]   [stress-80] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:55:43]   [stress-80] >>> 
+[18:56:01]   [stress-81] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:56:01]   [stress-81] >>> 
+[18:56:19]   [stress-82] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:56:19]   [stress-82] >>> 
+[18:56:37]   [stress-83] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[18:56:37]   [stress-83] >>> 
+[18:56:56]   [stress-84] OK: gen=256tok prompt=20tok 15.4tok/s load=0.20s
+[18:56:56]   [stress-84] >>> 
+[18:57:14]   [stress-85] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[18:57:14]   [stress-85] >>> 
+[18:57:32]   [stress-86] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[18:57:32]   [stress-86] >>> 
+[18:57:50]   [stress-87] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:57:50]   [stress-87] >>> 
+[18:58:08]   [stress-88] OK: gen=256tok prompt=20tok 15.5tok/s load=0.19s
+[18:58:08]   [stress-88] >>> 
+[18:58:26]   [stress-89] OK: gen=256tok prompt=18tok 15.5tok/s load=0.19s
+[18:58:26]   [stress-89] >>> 
+[18:58:45]   [stress-90] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:58:45]   [stress-90] >>> 
+[18:59:03]   [stress-91] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[18:59:03]   [stress-91] >>> 
+[18:59:21]   [stress-92] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:59:21]   [stress-92] >>> 
+[18:59:39]   [stress-93] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[18:59:39]   [stress-93] >>> 
+[18:59:57]   [stress-94] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[18:59:57]   [stress-94] >>> 
+[19:00:15]   [stress-95] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:00:15]   [stress-95] >>> 
+[19:00:34]   [stress-96] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:00:34]   [stress-96] >>> 
+[19:00:52]   [stress-97] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:00:52]   [stress-97] >>> 
+[19:01:10]   [stress-98] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:01:10]   [stress-98] >>> 
+[19:01:28]   [stress-99] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:01:28]   [stress-99] >>> 
+[19:01:46]   [stress-100] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:01:46]   [stress-100] >>> 
+[19:02:04]   [stress-101] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[19:02:04]   [stress-101] >>> 
+[19:02:23]   [stress-102] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:02:23]   [stress-102] >>> 
+[19:02:41]   [stress-103] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:02:41]   [stress-103] >>> 
+[19:02:59]   [stress-104] OK: gen=256tok prompt=18tok 15.5tok/s load=0.23s
+[19:02:59]   [stress-104] >>> 
+[19:03:17]   [stress-105] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:03:17]   [stress-105] >>> 
+[19:03:35]   [stress-106] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:03:35]   [stress-106] >>> 
+[19:03:53]   [stress-107] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:03:53]   [stress-107] >>> 
+[19:04:12]   [stress-108] OK: gen=256tok prompt=16tok 15.5tok/s load=0.21s
+[19:04:12]   [stress-108] >>> 
+[19:04:30]   [stress-109] OK: gen=256tok prompt=18tok 15.5tok/s load=0.21s
+[19:04:30]   [stress-109] >>> 
+[19:04:48]   [stress-110] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:04:48]   [stress-110] >>> 
+[19:05:06]   [stress-111] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:05:06]   [stress-111] >>> 
+[19:05:24]   [stress-112] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:05:24]   [stress-112] >>> 
+[19:05:42]   [stress-113] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:05:42]   [stress-113] >>> 
+[19:06:00]   [stress-114] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:06:00]   [stress-114] >>> 
+[19:06:19]   [stress-115] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:06:19]   [stress-115] >>> 
+[19:06:37]   [stress-116] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[19:06:37]   [stress-116] >>> 
+[19:06:55]   [stress-117] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:06:55]   [stress-117] >>> 
+[19:07:13]   [stress-118] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:07:13]   [stress-118] >>> 
+[19:07:31]   [stress-119] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:07:31]   [stress-119] >>> 
+[19:07:50]   [stress-120] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:07:50]   [stress-120] >>> 
+[19:08:08]   [stress-121] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:08:08]   [stress-121] >>> 
+[19:08:26]   [stress-122] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:08:26]   [stress-122] >>> 
+[19:08:44]   [stress-123] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:08:44]   [stress-123] >>> 
+[19:09:02]   [stress-124] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:09:02]   [stress-124] >>> 
+[19:09:20]   [stress-125] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:09:20]   [stress-125] >>> 
+[19:09:38]   [stress-126] OK: gen=256tok prompt=15tok 15.5tok/s load=0.19s
+[19:09:38]   [stress-126] >>> 
+[19:09:57]   [stress-127] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:09:57]   [stress-127] >>> 
+[19:10:15]   [stress-128] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:10:15]   [stress-128] >>> 
+[19:10:33]   [stress-129] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:10:33]   [stress-129] >>> 
+[19:10:51]   [stress-130] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:10:51]   [stress-130] >>> 
+[19:11:09]   [stress-131] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[19:11:09]   [stress-131] >>> 
+[19:11:27]   [stress-132] OK: gen=256tok prompt=18tok 15.5tok/s load=0.21s
+[19:11:27]   [stress-132] >>> 
+[19:11:46]   [stress-133] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:11:46]   [stress-133] >>> 
+[19:12:04]   [stress-134] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:12:04]   [stress-134] >>> 
+[19:12:22]   [stress-135] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:12:22]   [stress-135] >>> 
+[19:12:40]   [stress-136] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:12:40]   [stress-136] >>> 
+[19:12:58]   [stress-137] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:12:58]   [stress-137] >>> 
+[19:13:16]   [stress-138] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:13:16]   [stress-138] >>> 
+[19:13:35]   [stress-139] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:13:35]   [stress-139] >>> 
+[19:13:53]   [stress-140] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:13:53]   [stress-140] >>> 
+[19:14:11]   [stress-141] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:14:11]   [stress-141] >>> 
+[19:14:29]   [stress-142] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:14:29]   [stress-142] >>> 
+[19:14:47]   [stress-143] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:14:47]   [stress-143] >>> 
+[19:15:05]   [stress-144] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:15:05]   [stress-144] >>> 
+[19:15:24]   [stress-145] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:15:24]   [stress-145] >>> 
+[19:15:42]   [stress-146] OK: gen=256tok prompt=21tok 15.4tok/s load=0.20s
+[19:15:42]   [stress-146] >>> 
+[19:16:00]   [stress-147] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:16:00]   [stress-147] >>> 
+[19:16:18]   [stress-148] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:16:18]   [stress-148] >>> 
+[19:16:36]   [stress-149] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:16:36]   [stress-149] >>> 
+[19:16:54]   [stress-150] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:16:54]   [stress-150] >>> 
+[19:17:13]   [stress-151] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:17:13]   [stress-151] >>> 
+[19:17:31]   [stress-152] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:17:31]   [stress-152] >>> 
+[19:17:49]   [stress-153] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:17:49]   [stress-153] >>> 
+[19:18:07]   [stress-154] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:18:07]   [stress-154] >>> 
+[19:18:25]   [stress-155] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:18:25]   [stress-155] >>> 
+[19:18:43]   [stress-156] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:18:43]   [stress-156] >>> 
+[19:19:02]   [stress-157] OK: gen=256tok prompt=15tok 15.4tok/s load=0.19s
+[19:19:02]   [stress-157] >>> 
+[19:19:20]   [stress-158] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:19:20]   [stress-158] >>> 
+[19:19:38]   [stress-159] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:19:38]   [stress-159] >>> 
+[19:19:56]   [stress-160] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:19:56]   [stress-160] >>> 
+[19:20:14]   [stress-161] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[19:20:14]   [stress-161] >>> 
+[19:20:33]   [stress-162] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:20:33]   [stress-162] >>> 
+[19:20:51]   [stress-163] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:20:51]   [stress-163] >>> 
+[19:21:09]   [stress-164] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:21:09]   [stress-164] >>> 
+[19:21:27]   [stress-165] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:21:27]   [stress-165] >>> 
+[19:21:45]   [stress-166] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:21:45]   [stress-166] >>> 
+[19:22:03]   [stress-167] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:22:03]   [stress-167] >>> 
+[19:22:22]   [stress-168] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:22:22]   [stress-168] >>> 
+[19:22:40]   [stress-169] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:22:40]   [stress-169] >>> 
+[19:22:58]   [stress-170] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:22:58]   [stress-170] >>> 
+[19:23:16]   [stress-171] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:23:16]   [stress-171] >>> 
+[19:23:34]   [stress-172] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:23:34]   [stress-172] >>> 
+[19:23:52]   [stress-173] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:23:52]   [stress-173] >>> 
+[19:24:11]   [stress-174] OK: gen=256tok prompt=20tok 15.4tok/s load=0.20s
+[19:24:11]   [stress-174] >>> 
+[19:24:29]   [stress-175] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:24:29]   [stress-175] >>> 
+[19:24:47]   [stress-176] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[19:24:47]   [stress-176] >>> 
+[19:25:05]   [stress-177] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:25:05]   [stress-177] >>> 
+[19:25:23]   [stress-178] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:25:23]   [stress-178] >>> 
+[19:25:42]   [stress-179] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:25:42]   [stress-179] >>> 
+[19:26:00]   [stress-180] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:26:00]   [stress-180] >>> 
+[19:26:18]   [stress-181] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:26:18]   [stress-181] >>> 
+[19:26:36]   [stress-182] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:26:36]   [stress-182] >>> 
+[19:26:54]   [stress-183] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:26:54]   [stress-183] >>> 
+[19:27:12]   [stress-184] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:27:12]   [stress-184] >>> 
+[19:27:30]   [stress-185] OK: gen=256tok prompt=17tok 15.5tok/s load=0.20s
+[19:27:30]   [stress-185] >>> 
+[19:27:49]   [stress-186] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:27:49]   [stress-186] >>> 
+[19:28:07]   [stress-187] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:28:07]   [stress-187] >>> 
+[19:28:25]   [stress-188] OK: gen=256tok prompt=15tok 15.5tok/s load=0.20s
+[19:28:25]   [stress-188] >>> 
+[19:28:43]   [stress-189] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:28:43]   [stress-189] >>> 
+[19:29:01]   [stress-190] OK: gen=256tok prompt=17tok 15.5tok/s load=0.19s
+[19:29:01]   [stress-190] >>> 
+[19:29:20]   [stress-191] OK: gen=256tok prompt=21tok 15.5tok/s load=0.20s
+[19:29:20]   [stress-191] >>> 
+[19:29:38]   [stress-192] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[19:29:38]   [stress-192] >>> 
+[19:29:56]   [stress-193] OK: gen=256tok prompt=20tok 15.5tok/s load=0.20s
+[19:29:56]   [stress-193] >>> 
+[19:30:14]   [stress-194] OK: gen=256tok prompt=18tok 15.5tok/s load=0.20s
+[19:30:14]   [stress-194] >>> 
+[19:30:32]   [stress-195] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:30:32]   [stress-195] >>> 
+[19:30:50]   [stress-196] OK: gen=256tok prompt=19tok 15.5tok/s load=0.20s
+[19:30:50]   [stress-196] >>> 
+[19:31:09]   [stress-197] OK: gen=256tok prompt=16tok 15.5tok/s load=0.19s
+[19:31:09]   [stress-197] >>> 
+[19:31:27]   [stress-198] OK: gen=256tok prompt=16tok 15.5tok/s load=0.20s
+[19:31:27]   [stress-198] >>> 
+[19:31:45]   [stress-199] OK: gen=256tok prompt=18tok 15.4tok/s load=0.20s
+[19:31:45]   [stress-199] >>> 
+[19:31:46] 
+[19:31:46] Stress complete: 199 iterations in 3616s, 0 failures
+[19:31:46] 
+[19:31:46] === TEST 6: CONCURRENT REQUESTS ===
+[19:31:55]   [concurrent-3] 128tok 15.5tok/s wall=8772ms
+[19:32:03]   [concurrent-1] 128tok 15.5tok/s wall=17268ms
+[19:32:12]   [concurrent-2] 128tok 15.5tok/s wall=25763ms
+[19:32:12] Concurrent test complete
+[19:32:12] 
+[19:32:12] === POST-TEST HEALTH ===
+[19:32:12]   RAM: 
+[19:32:12]   VRAM: 9975668736
+[19:32:12]   GPU errors: 0
+0
+[19:32:12]   Ollama: active
+[19:32:12]   Uptime: up 1 day, 48 minutes
+[19:32:12] 
+[19:32:12] ==========================================
+[19:32:12] TEST SUITE COMPLETE
+[19:32:12] Finished: Mon Jul 13 19:32:12 CDT 2026
+[19:32:12] ==========================================
+[19:32:12] 
+[19:32:12] SUMMARY:
+[19:32:12]   Successful inferences: 232
+[19:32:12]   Failures: 0
+0
+[19:32:12]   Avg tok/s: 0.2
