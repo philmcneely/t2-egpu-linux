@@ -185,7 +185,9 @@ I also set `OLLAMA_KEEP_ALIVE=-1` to keep the model in VRAM permanently. On a de
 
 ### Sustained Long Context
 
-73 consecutive inferences at 8K context over 30 minutes. Zero failures. 12.4 tok/s constant. No VRAM drift. Ollama's prompt caching kicked in after run 3, pushing prompt evaluation from 130 tok/s to 71,000 tok/s for repeated prefixes - effectively free.
+73 consecutive inferences at 8K context over 30 minutes. Zero failures. 12.4 tok/s constant. No VRAM drift.
+
+One thing worth noting: Ollama caches KV states from previous requests. When the same prompt prefix repeats (which it does in a sustained test using the same corpus), Ollama skips re-evaluating those tokens and loads the cached KV vectors directly. That's why prompt evaluation jumped from 130 tok/s on the first run to 71,000 tok/s by run 3 - it's a cache hit, not actual compute. Generation speed (the number that matters for output) stayed at 12.4 tok/s throughout. This matters for real workloads: if your batch jobs share a long system prompt or document prefix, prompt evaluation becomes essentially free after the first request. Unique prompts every time? You're paying the full 130 tok/s each request.
 
 ### What the Numbers Mean
 
