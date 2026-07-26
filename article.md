@@ -200,3 +200,46 @@ It works, and it's been stable for days now.
 The entire setup - kernel module, boot scripts, systemd service, modprobe config, GRUB parameters, and a detailed step-by-step guide - is at [github.com/philmcneely/t2-egpu-linux](https://github.com/philmcneely/t2-egpu-linux).
 
 *I used Claude to help draft and edit this article.*
+
+---
+
+## Epilogue: The Second Card
+
+Remember earlier, where I said the second RX 6800 "hasn't been tested yet - it's the next step," and I'd update this when it was confirmed? Well. It's confirmed. Sort of. Buckle up.
+
+The second card went into a **Razer Core X** (not another AKiTiO - I used what I had), on the other Thunderbolt controller, exactly where the diagram said it should go. Two enclosures, two RX 6800s, two Titan Ridge controllers, 32GB of VRAM total. On paper, a 32GB inference node in a Mac Mini. NUTS.
+
+Getting both cards to come up meant rewriting the kernel module and the boot script to stop assuming there's exactly ONE GPU - now they loop over every card and hand each one its own 256MB window (card 0 at `0x4010000000`, card 1 at `0x4020000000`). That part went shockingly smoothly. The multi-GPU code is in [`dual-gpu/`](dual-gpu/) if you want it.
+
+Two things bit me that are worth writing down so they don't bite you:
+
+- **The BAR programming only happens at boot.** I moved the first card to a different Thunderbolt port and it vanished - amdgpu failed with `-22`, no `/dev/dri`, the works. Nothing was broken. The init script just runs once at boot and never re-ran after the card re-enumerated on a new bus. A reboot fixed it instantly. So: swap a port or a cable, expect to reboot.
+- **Thunderbolt enclosures have to be *enrolled*, not just authorized.** I authorized the Core X live and it worked - until the next reboot, when it came back unauthorized and its GPU never hit the PCI bus. `boltctl enroll --policy auto` makes it stick.
+
+### The numbers (the good part)
+
+Both cards are identical, full-speed peers. No "second card tax," no degradation on the Core X:
+
+| Test | Result |
+|------|--------|
+| Card 0 alone (qwen3:14b Q4, pinned) | 20.5 tok/s |
+| Card 1 alone (qwen3:14b Q4, pinned) | 20.5 tok/s |
+| Both cards, 8 concurrent requests | **164 tok/s aggregate** |
+| Q8 *weights* (qwen3:14b-q8_0), one card | 10.2 tok/s (fits in 14.7GB; half the speed of Q4 - it's moving twice the bytes over a Thunderbolt link, and this box is bandwidth-bound) |
+
+Pinning a model to a specific card, by the way, is `ROCR_VISIBLE_DEVICES=0` or `=1` on the Ollama process (with `OLLAMA_MODELS` pointed at your model store, or it'll cheerfully tell you the model doesn't exist). That's also how you run two independent Ollama instances, one hot on each card.
+
+### The part where it doesn't work
+
+Here's the "sort of." I wanted the giggle: ONE big model - a 30B mixture-of-experts and a 27B dense model, both at Q8 - split across both cards. 32GB of VRAM, right? Let's use it.
+
+Both models **load** perfectly. VRAM fills on BOTH cards - I watched it, the split is real. And then llama-server **segfaults**. Every single time. Zero kernel GPU errors in `dmesg` - this isn't the driver faulting, it's the inference server crashing in userspace the moment it tries to actually compute across two cards.
+
+The reason (I'm fairly sure): there's no GPU peer-to-peer here. The two cards are on separate Thunderbolt controllers with no direct card-to-card path, and llama.cpp's ROCm multi-GPU code assumes it can do peer copies. It can't, so it walks off a cliff. I tried the usual `GGML_CUDA_NO_PEER_COPY=1` escape hatch; Ollama's bundled runner ignored it (still advertised `PEER_MAX_BATCH_SIZE=128`). A custom llama.cpp build or a different backend like vLLM might get there - that's a different weekend.
+
+So what IS this box? It's a fantastic **2× independent-card** inference node: two models resident at once, or one model served hot on both cards for 2× throughput. It is NOT a "run one giant model across both cards" node. If you buy two eGPUs expecting to pool their VRAM into one big pile over Thunderbolt - that's the part I hit at full speed so you don't have to.
+
+Still worth it. Still sitting in a closet drawing 300W. Still NUTS.
+
+*The dual-card testing and this epilogue were done with Claude as well.*
+
