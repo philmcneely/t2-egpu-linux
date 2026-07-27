@@ -205,41 +205,37 @@ The entire setup - kernel module, boot scripts, systemd service, modprobe config
 
 ## Epilogue: The Second Card
 
-Remember earlier, where I said the second RX 6800 "hasn't been tested yet - it's the next step," and I'd update this when it was confirmed? Well. It's confirmed. Sort of. Buckle up.
+Way back up top I said the second RX 6800 "hasn't been tested yet - it's the next step." It's tested now. And to be clear about what I was testing: this box was always a dedicated node for slow, unattended work, and the two-card plan (separate controllers, don't let the GPUs starve each other for bandwidth) was about running things *independently* - never about pooling 32GB into one big model. The `rebar=0` story earlier already tells you why pooling over Thunderbolt was never on the table - we can only expose 256MB through the BAR, and the two cards have no path to each other. The real big models live on the machines built for them. This one just needed a second set of hands.
 
-The second card went into a **Razer Core X** (not another AKiTiO - I used what I had), on the other Thunderbolt controller, exactly where the diagram said it should go. Two enclosures, two RX 6800s, two Titan Ridge controllers, 32GB of VRAM total. On paper, a 32GB inference node in a Mac Mini. NUTS.
+The second card went into a **Razer Core X** (not another AKiTiO - I used what I had), on the other Titan Ridge controller, exactly where the diagram said. Getting both up meant teaching the kernel module and boot script to stop assuming a single GPU - now they loop over every card and hand each its own 256MB window (card 0 at `0x4010000000`, card 1 at `0x4020000000`). That part went shockingly smoothly. Multi-GPU code is in [`dual-gpu/`](dual-gpu/).
 
-Getting both cards to come up meant rewriting the kernel module and the boot script to stop assuming there's exactly ONE GPU - now they loop over every card and hand each one its own 256MB window (card 0 at `0x4010000000`, card 1 at `0x4020000000`). That part went shockingly smoothly. The multi-GPU code is in [`dual-gpu/`](dual-gpu/) if you want it.
+Two things bit me, worth writing down so they don't bite you:
 
-Two things bit me that are worth writing down so they don't bite you:
+- **The BAR programming only happens at boot.** I moved the first card to a different Thunderbolt port and it vanished - amdgpu failed with `-22`, no `/dev/dri`. Nothing was actually broken; the init script just runs once at boot and never re-ran after the card came up on a new bus. A reboot fixed it instantly. Swap a port or a cable, expect to reboot.
+- **Thunderbolt enclosures have to be *enrolled*, not just authorized.** I authorized the Core X live and it worked - until the next reboot, when it came back unauthorized and never hit the PCI bus. `boltctl enroll --policy auto` makes it stick.
 
-- **The BAR programming only happens at boot.** I moved the first card to a different Thunderbolt port and it vanished - amdgpu failed with `-22`, no `/dev/dri`, the works. Nothing was broken. The init script just runs once at boot and never re-ran after the card re-enumerated on a new bus. A reboot fixed it instantly. So: swap a port or a cable, expect to reboot.
-- **Thunderbolt enclosures have to be *enrolled*, not just authorized.** I authorized the Core X live and it worked - until the next reboot, when it came back unauthorized and its GPU never hit the PCI bus. `boltctl enroll --policy auto` makes it stick.
+### The numbers
 
-### The numbers (the good part)
-
-Both cards are identical, full-speed peers. No "second card tax," no degradation on the Core X:
+Both cards are identical, full-speed peers - no "second card tax" on the Core X:
 
 | Test | Result |
 |------|--------|
 | Card 0 alone (qwen3:14b Q4, pinned) | 20.5 tok/s |
 | Card 1 alone (qwen3:14b Q4, pinned) | 20.5 tok/s |
 | Both cards, 8 concurrent requests | **164 tok/s aggregate** |
-| Q8 *weights* (qwen3:14b-q8_0), one card | 10.2 tok/s (fits in 14.7GB; half the speed of Q4 - it's moving twice the bytes over a Thunderbolt link, and this box is bandwidth-bound) |
+| Q8 *weights* (qwen3:14b-q8_0), one card | 10.2 tok/s (fits in 14.7GB; half of Q4 - twice the bytes over a bandwidth-bound Thunderbolt link) |
 
-Pinning a model to a specific card, by the way, is `ROCR_VISIBLE_DEVICES=0` or `=1` on the Ollama process (with `OLLAMA_MODELS` pointed at your model store, or it'll cheerfully tell you the model doesn't exist). That's also how you run two independent Ollama instances, one hot on each card.
+Pin a model to a card with `ROCR_VISIBLE_DEVICES=0` or `=1` on the Ollama process (with `OLLAMA_MODELS` pointed at your store, or it'll cheerfully insist the model doesn't exist). That's also how you run two independent Ollama instances, one hot on each card - which is the whole point.
 
-### The part where it doesn't work
+### The thing I already knew, confirmed with my own eyes
 
-Here's the "sort of." I wanted the giggle: ONE big model - a 30B mixture-of-experts and a 27B dense model, both at Q8 - split across both cards. 32GB of VRAM, right? Let's use it.
+I still tried the obvious dumb thing: one 30B model split across both cards. I knew it wouldn't fly - no shared path between two cards on separate controllers, same wall as the `rebar=0` constraint earlier - but I wanted to watch it fail instead of taking my own word for it.
 
-Both models **load** perfectly. VRAM fills on BOTH cards - I watched it, the split is real. And then llama-server **segfaults**. Every single time. Zero kernel GPU errors in `dmesg` - this isn't the driver faulting, it's the inference server crashing in userspace the moment it tries to actually compute across two cards.
+It fails politely. Both cards' VRAM fills - the split is real, Ollama lays the layers across both - and then llama-server segfaults the instant it tries to compute across them. Zero kernel GPU errors; it's the userspace runner, not the driver. No peer-to-peer between the cards, and llama.cpp's ROCm path assumes there is. (`GGML_CUDA_NO_PEER_COPY=1` didn't help - Ollama's bundled runner ignored it.) A custom llama.cpp build or vLLM might manage it; different weekend.
 
-The reason (I'm fairly sure): there's no GPU peer-to-peer here. The two cards are on separate Thunderbolt controllers with no direct card-to-card path, and llama.cpp's ROCm multi-GPU code assumes it can do peer copies. It can't, so it walks off a cliff. I tried the usual `GGML_CUDA_NO_PEER_COPY=1` escape hatch; Ollama's bundled runner ignored it (still advertised `PEER_MAX_BATCH_SIZE=128`). A custom llama.cpp build or a different backend like vLLM might get there - that's a different weekend.
+None of which matters for what this box is *for*. It was always the batch/async workhorse - now it's that with two independent full-speed cards: two models resident at once, or one model hot on both for 2× throughput. Exactly the dedicated, don't-tie-up-a-real-GPU node I wanted at the top of this article. It just has twice the hands now.
 
-So what IS this box? It's a fantastic **2× independent-card** inference node: two models resident at once, or one model served hot on both cards for 2× throughput. It is NOT a "run one giant model across both cards" node. If you buy two eGPUs expecting to pool their VRAM into one big pile over Thunderbolt - that's the part I hit at full speed so you don't have to.
-
-Still worth it. Still sitting in a closet drawing 300W. Still NUTS.
+Still sitting in a closet. Still drawing 300W. Still NUTS.
 
 *The dual-card testing and this epilogue were done with Claude as well.*
 
