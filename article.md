@@ -205,11 +205,11 @@ The entire setup - kernel module, boot scripts, systemd service, modprobe config
 
 ## Epilogue: The Second Card
 
-Way back up top I said the second RX 6800 "hasn't been tested yet - it's the next step." It's tested now. And to be clear about what I was testing: this box was always a dedicated node for slow, unattended work, and the two-card plan (separate controllers, don't let the GPUs starve each other for bandwidth) was about running things *independently* - never about pooling 32GB into one big model. The `rebar=0` story earlier already tells you why pooling over Thunderbolt was never on the table - we can only expose 256MB through the BAR, and the two cards have no path to each other. The real big models live on the machines built for them. This one just needed a second set of hands.
+Way back up top I said the second RX 6800 "hasn't been tested yet - it's the next step." It's tested now. And to be clear about what I was testing: this box was always a dedicated node for slow, unattended work, and the two-card plan (separate controllers, don't let the GPUs starve each other for bandwidth) was about running things *independently* - never about pooling 32GB into one big model (as much as I really would like to!). The `rebar=0` story earlier already tells you why pooling over Thunderbolt was never on the table - we can only expose 256MB through the BAR, and the two cards have no path to each other. The real big models live on the machines built for them. This one just needed a second set of hands.
 
 The second card went into a **Razer Core X** (not another AKiTiO - I used what I had), on the other Titan Ridge controller, exactly where the diagram said. Getting both up meant teaching the kernel module and boot script to stop assuming a single GPU - now they loop over every card and hand each its own 256MB window (card 0 at `0x4010000000`, card 1 at `0x4020000000`). That part went shockingly smoothly. Multi-GPU code is in [`dual-gpu/`](dual-gpu/).
 
-Two things bit me, worth writing down so they don't bite you:
+Two things bit me (well Claude, as I was instructing it to do the work), worth writing down so they don't bite you:
 
 - **The BAR programming only happens at boot.** I moved the first card to a different Thunderbolt port and it vanished - amdgpu failed with `-22`, no `/dev/dri`. Nothing was actually broken; the init script just runs once at boot and never re-ran after the card came up on a new bus. A reboot fixed it instantly. Swap a port or a cable, expect to reboot.
 - **Thunderbolt enclosures have to be *enrolled*, not just authorized.** I authorized the Core X live and it worked - until the next reboot, when it came back unauthorized and never hit the PCI bus. `boltctl enroll --policy auto` makes it stick.
@@ -237,5 +237,5 @@ None of which matters for what this box is *for*. It was always the batch/async 
 
 Still sitting in a closet. Still drawing 300W. Still NUTS.
 
-*The dual-card testing and this epilogue were done with Claude as well.*
+*I used Claude to help draft and edit this article. The dual-card testing and this epilogue were done with Claude as well.*
 
