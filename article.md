@@ -199,8 +199,6 @@ It works, and it's been stable for days now.
 
 The entire setup - kernel module, boot scripts, systemd service, modprobe config, GRUB parameters, and a detailed step-by-step guide - is at [github.com/philmcneely/t2-egpu-linux](https://github.com/philmcneely/t2-egpu-linux).
 
-*I used Claude to help draft and edit this article.*
-
 ---
 
 ## Epilogue: The Second Card
