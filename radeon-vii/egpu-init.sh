@@ -10,13 +10,18 @@
 LOG_TAG="egpu-init"; log(){ logger -t "$LOG_TAG" "$1"; echo "$1"; }
 log "=== eGPU Init (Radeon VII + doorbell BAR2) ==="
 
-GPU_BUSES=""
-for i in $(seq 1 30); do
+# Wait for BOTH Radeon VIIs to enumerate (the two TB enclosures authorize at
+# slightly different times on boot; grabbing only the first one leaves the
+# second card unprogrammed and unbound). Wait for a stable count of 2, but
+# fall back to whatever is present after ~100s so a genuinely-single-card
+# setup still works.
+GPU_BUSES=""; EXPECT=${VII_EXPECT:-2}
+for i in $(seq 1 50); do
 	GPU_BUSES=$(lspci -d 1002:66af 2>/dev/null | awk '{print $1}' | sort)
-	[ -n "$GPU_BUSES" ] && break
+	[ "$(echo "$GPU_BUSES" | grep -c .)" -ge "$EXPECT" ] && break
 	sleep 2
 done
-[ -z "$GPU_BUSES" ] && { log "ERROR: no Radeon VII found after 60s"; exit 1; }
+[ -z "$GPU_BUSES" ] && { log "ERROR: no Radeon VII found after 100s"; exit 1; }
 log "Found $(echo "$GPU_BUSES" | wc -l) VII(s): $(echo $GPU_BUSES | tr '\n' ' ')"
 
 idx=0

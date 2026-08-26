@@ -61,6 +61,15 @@ Enroll the enclosures so they auto-authorize every boot:
 boltctl enroll --policy auto <uuid>
 ```
 
+
+## Boot race: wait for BOTH cards
+
+The two Thunderbolt enclosures authorize at slightly different times on cold boot. The
+init script must wait for a **stable count of 2** VIIs before programming BARs — grabbing
+only the first-ready card leaves the second unprogrammed and unbound (`amdgpu` binds one,
+`/sys/class/drm/card1` never appears). `egpu-init.sh` here waits for both (override with
+`VII_EXPECT=1` for a single-card box). Verified across a cold reboot: both cards bind.
+
 ## Inference on gfx906 — use ROCm, not Vulkan
 
 > **Full operational guide: [`INFERENCE.md`](INFERENCE.md)** (the `HSA_XNACK=0` unlock for
