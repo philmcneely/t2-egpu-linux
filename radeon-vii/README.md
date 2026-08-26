@@ -62,6 +62,8 @@ boltctl enroll --policy auto <uuid>
 ```
 
 
+> **Operational runbook (keep-hot, boot chain, and the traps that cost hours): [`OPERATIONS.md`](OPERATIONS.md)**
+
 ## Boot race: wait for BOTH cards
 
 The two Thunderbolt enclosures authorize at slightly different times on cold boot. The
