@@ -63,6 +63,10 @@ boltctl enroll --policy auto <uuid>
 
 ## Inference on gfx906 — use ROCm, not Vulkan
 
+> **Full operational guide: [`INFERENCE.md`](INFERENCE.md)** (the `HSA_XNACK=0` unlock for
+> keeping both models hot, `think:false`, context limits, staggered loading) plus ready-to-run
+> scripts in [`ollama/`](ollama/). Summary below.
+
 - **ROCm 7.2** recognizes gfx906 natively (`rocminfo` shows `gfx906` agents). But **stock
   ollama's bundled rocBLAS dropped gfx906** (`"no rocblas support for gfx target gfx906"`)
   and silently falls back to **Vulkan/RADV**, which is ~20× slower for LLM compute
