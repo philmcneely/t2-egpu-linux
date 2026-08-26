@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep both Radeon VII ollama models hot (staggered load on boot)
+After=docker.service egpu-init.service network-online.target
+Wants=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/vii-warm.sh
+RemainAfterExit=yes
+TimeoutStartSec=900
+[Install]
+WantedBy=multi-user.target
