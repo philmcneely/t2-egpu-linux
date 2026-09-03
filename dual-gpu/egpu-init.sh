@@ -16,9 +16,17 @@ log "=== eGPU Init Starting ==="
 
 # Wait for at least one Thunderbolt GPU to appear
 GPU_BUSES=""
-for i in $(seq 1 30); do
+PREV_CNT=-1; STABLE=0
+for i in $(seq 1 45); do
     GPU_BUSES=$(lspci -d 1002:73bf 2>/dev/null | awk '{print $1}' | sort)
-    [ -n "$GPU_BUSES" ] && break
+    CNT=$(printf '%s\n' "$GPU_BUSES" | grep -c .)
+    log "  settle wait: $CNT card(s) (i=$i)"
+    # CRITICAL: wait for a STABLE count (up to 2) before any setpci -- programming
+    # bridges while a 2nd card is still enumerating clobbers its PCIe tunnel.
+    if [ "$CNT" -ge 2 ] && [ "$CNT" -eq "$PREV_CNT" ]; then break; fi
+    if [ "$CNT" -ge 1 ] && [ "$CNT" -eq "$PREV_CNT" ]; then STABLE=$((STABLE+1)); else STABLE=0; fi
+    [ "$STABLE" -ge 8 ] && break
+    PREV_CNT=$CNT
     sleep 2
 done
 
