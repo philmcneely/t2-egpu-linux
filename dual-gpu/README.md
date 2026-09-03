@@ -46,12 +46,18 @@ sudo reboot     # BAR programming is boot-time only
   `Region 2` must sit inside its bridge's *prefetchable memory behind bridge*
   window, and `Control:` must show `BusMaster+`. This is platform-, not
   Vega/Navi-specific — the sister box's two Radeon VIIs needed the identical fix.
-- **Wait for *all* cards before loading amdgpu.** The second enclosure (on the
-  other Titan Ridge controller) can take ~130 s into boot to authorize. If the
-  script programs only the first card and lets `amdgpu` load, the late card is
-  auto-probed with no BAR and left wedged. `egpu-init.sh` waits for a stable count
-  of `EGPU_EXPECT` (default 2) cards — up to ~200 s — *before* it touches amdgpu, so
-  every card gets its BARs before the driver binds.
+- **Wait for *all* cards before loading amdgpu — and don't let systemd kill the
+  wait.** The second enclosure (on the other Titan Ridge controller) can take
+  ~130 s into boot to authorize on a warm reboot, and up to **~190 s on a cold
+  boot**. Two things follow: (1) `egpu-init.sh` waits for a stable count of
+  `EGPU_EXPECT` (default 2) cards — up to ~300 s — *before* it touches amdgpu, so a
+  late card gets its BARs before the driver binds (a late card auto-probed with no
+  BAR is left wedged); (2) `egpu-init.service` **must** set
+  `TimeoutStartSec=infinity`. A finite timeout (the old 120 s) makes systemd kill
+  the service before the 2nd card even arrives on a cold boot, so it never programs
+  BARs or loads amdgpu and you boot with **zero** GPUs. This only shows up on a cold
+  boot — warm reboots train Thunderbolt fast enough to hide it. If you run other
+  services that need the GPUs (e.g. Ollama), order them `After=egpu-init.service`.
 - **The BAR programming only happens at boot.** Swapping a Thunderbolt port or
   cable re-enumerates the card on a new bus with an unprogrammed BAR (amdgpu fails
   `-22`, no `/dev/dri`). Reboot to re-run the init.

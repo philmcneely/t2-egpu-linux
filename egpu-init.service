@@ -7,7 +7,12 @@ Wants=thunderbolt.service
 Type=oneshot
 ExecStart=/usr/local/bin/egpu-init.sh
 RemainAfterExit=yes
-TimeoutStartSec=120
+# Do NOT cap this. On a COLD boot the 2nd Thunderbolt enclosure can take ~190s
+# to authorize (vs ~30-130s on a warm reboot). A finite TimeoutStartSec (e.g.
+# the old 120s) makes systemd kill egpu-init before it sees the 2nd card, so it
+# never programs BARs / loads amdgpu and you boot with zero GPUs. The script
+# self-bounds via its own ~300s settle-wait loop, so let it run to completion.
+TimeoutStartSec=infinity
 
 [Install]
 WantedBy=multi-user.target

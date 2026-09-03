@@ -16,7 +16,7 @@ log "=== eGPU Init (RX6800 + doorbell BAR2) ==="
 # leaves the 2nd card unprogrammed. amdgpu is blacklisted and loaded below,
 # so a late card never gets a poisoned no-BAR auto-probe. Wait up to ~200s.
 GPU_BUSES=""; EXPECT=${EGPU_EXPECT:-2}; PREV_CNT=-1
-for i in $(seq 1 100); do
+for i in $(seq 1 150); do
 	GPU_BUSES=$(lspci -d 1002:73bf 2>/dev/null | awk '{print $1}' | sort)
 	CNT=$(printf '%s\n' "$GPU_BUSES" | grep -c .)
 	log "  settle wait: $CNT/$EXPECT card(s) (i=$i)"
@@ -24,7 +24,7 @@ for i in $(seq 1 100); do
 	PREV_CNT=$CNT
 	sleep 2
 done
-[ -z "$GPU_BUSES" ] && { log "ERROR: no RX 6800 found after ~200s"; exit 1; }
+[ -z "$GPU_BUSES" ] && { log "ERROR: no RX 6800 found after ~300s"; exit 1; }
 log "Found $(echo "$GPU_BUSES" | wc -l) card(s): $(echo $GPU_BUSES | tr '\n' ' ')"
 
 idx=0
