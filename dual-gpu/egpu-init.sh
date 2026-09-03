@@ -1,124 +1,87 @@
 #!/bin/bash
-# eGPU BAR initialization for RX 6800(s) on Mac Mini 2018 (T2)
-# Programs bridge pref windows + GPU BAR 0 to 64-bit space for every
-# RX 6800 found, loads the kernel module to patch the resource tree,
-# then loads amdgpu.
-#
-# Multi-GPU: card i is placed at 0x4010000000 + i*0x10000000 (256MB each):
-#   card 0 -> 0x4010000000 - 0x401FFFFFFF   (reg24 1FF11001)
-#   card 1 -> 0x4020000000 - 0x402FFFFFFF   (reg24 2FF12001)
+# eGPU BAR init for RX 6800(s) (1002:73bf) on Mac Mini 2018 (T2).
+# Programs BAR0 (256MB framebuffer) AND BAR2 (2MB doorbell) for each card
+# into a 512MB 64-bit prefetchable window, loads the resource-tree module,
+# then amdgpu. BAR2 is REQUIRED or the KIQ compute ring test times out (-110)
+# because the GPU never sees ring doorbells (root cause of the 2nd-card fail).
+#   card i: window base = 0x4010000000 + i*0x20000000 (512MB stride)
+#     BAR0 -> base            (256MB)   reg 10/14
+#     BAR2 -> base+0x10000000 (2MB)     reg 18/1C
 # Window math must match egpu_bar.c.
+LOG_TAG="egpu-init"; log(){ logger -t "$LOG_TAG" "$1"; echo "$1"; }
+log "=== eGPU Init (RX6800 + doorbell BAR2) ==="
 
-LOG_TAG="egpu-init"
-log() { logger -t "$LOG_TAG" "$1"; echo "$1"; }
-
-log "=== eGPU Init Starting ==="
-
-# Wait for at least one Thunderbolt GPU to appear
-GPU_BUSES=""
-PREV_CNT=-1; STABLE=0
-for i in $(seq 1 45); do
-    GPU_BUSES=$(lspci -d 1002:73bf 2>/dev/null | awk '{print $1}' | sort)
-    CNT=$(printf '%s\n' "$GPU_BUSES" | grep -c .)
-    log "  settle wait: $CNT card(s) (i=$i)"
-    # CRITICAL: wait for a STABLE count (up to 2) before any setpci -- programming
-    # bridges while a 2nd card is still enumerating clobbers its PCIe tunnel.
-    if [ "$CNT" -ge 2 ] && [ "$CNT" -eq "$PREV_CNT" ]; then break; fi
-    if [ "$CNT" -ge 1 ] && [ "$CNT" -eq "$PREV_CNT" ]; then STABLE=$((STABLE+1)); else STABLE=0; fi
-    [ "$STABLE" -ge 8 ] && break
-    PREV_CNT=$CNT
-    sleep 2
+# Wait for BOTH cards to enumerate. The 2nd TB enclosure (Razer on the 2nd
+# controller) can authorize up to ~135s into boot; grabbing only the first
+# leaves the 2nd card unprogrammed. amdgpu is blacklisted and loaded below,
+# so a late card never gets a poisoned no-BAR auto-probe. Wait up to ~200s.
+GPU_BUSES=""; EXPECT=${EGPU_EXPECT:-2}; PREV_CNT=-1
+for i in $(seq 1 100); do
+	GPU_BUSES=$(lspci -d 1002:73bf 2>/dev/null | awk '{print $1}' | sort)
+	CNT=$(printf '%s\n' "$GPU_BUSES" | grep -c .)
+	log "  settle wait: $CNT/$EXPECT card(s) (i=$i)"
+	if [ "$CNT" -ge "$EXPECT" ] && [ "$CNT" -eq "$PREV_CNT" ]; then break; fi
+	PREV_CNT=$CNT
+	sleep 2
 done
-
-if [ -z "$GPU_BUSES" ]; then
-    log "ERROR: no RX 6800 found after 60s"
-    exit 1
-fi
-
-GPU_COUNT=$(echo "$GPU_BUSES" | wc -l)
-log "Found $GPU_COUNT GPU(s): $(echo $GPU_BUSES | tr '\n' ' ')"
+[ -z "$GPU_BUSES" ] && { log "ERROR: no RX 6800 found after ~200s"; exit 1; }
+log "Found $(echo "$GPU_BUSES" | wc -l) card(s): $(echo $GPU_BUSES | tr '\n' ' ')"
 
 idx=0
 for GPU_BUS in $GPU_BUSES; do
-    # Window for this card
-    base20=$(( 0x100 * (idx + 1) ))          # 0x100, 0x200, ...
-    limit20=$(( base20 + 0xFF ))             # 0x1FF, 0x2FF, ...
-    base_reg=$(( (base20 << 4) | 1 ))        # 0x1001, 0x2001, ...
-    limit_reg=$(( (limit20 << 4) | 1 ))      # 0x1FF1, 0x2FF1, ...
-    REG24=$(printf '%04X%04X' $limit_reg $base_reg)   # 1FF11001, 2FF12001
-    BAR0_LO=$(printf '%08X' $(( (0x10000000 * (idx + 1)) | 0xC )))  # 1000000C, 2000000C
+	# 512MB window per card; PCI bridge pref fields are 1MB-granular (bits 31:20)
+	base20=$(( 0x100 + idx * 0x200 ))          # 0x100, 0x300, ...
+	limit20=$(( base20 + 0x1FF ))              # +512MB
+	base_reg=$(( (base20 << 4) | 1 ))
+	limit_reg=$(( (limit20 << 4) | 1 ))
+	REG24=$(printf '%04X%04X' $limit_reg $base_reg)
+	BAR0_LO=$(printf '%08X' $(( (0x10000000 + idx * 0x20000000) | 0xC )))   # base
+	BAR2_LO=$(printf '%08X' $(( (0x20000000 + idx * 0x20000000) | 0xC )))   # base+256MB
+	log "GPU[$idx] $GPU_BUS win base20=0x$(printf %X $base20) reg24=$REG24 bar0=$BAR0_LO bar2=$BAR2_LO"
 
-    log "GPU[$idx] $GPU_BUS -> window base20=0x$(printf %X $base20) reg24=$REG24 bar0=$BAR0_LO"
+	GPU_SYSFS=$(readlink -f /sys/bus/pci/devices/0000:$GPU_BUS 2>/dev/null)
+	[ -z "$GPU_SYSFS" ] && { log "ERROR: no sysfs for $GPU_BUS"; idx=$((idx+1)); continue; }
+	BRIDGES=$(echo "$GPU_SYSFS" | tr '/' '\n' | grep '^0000:' | head -n-1 | sed 's/^0000://')
+	for br in $BRIDGES; do
+		CLASS=$(cat /sys/bus/pci/devices/0000:$br/class 2>/dev/null)
+		if [ "${CLASS:0:6}" = "0x0604" ]; then
+			setpci -s "$br" 24.L=$REG24 2>/dev/null
+			setpci -s "$br" 28.L=00000040 2>/dev/null
+			setpci -s "$br" 2C.L=00000040 2>/dev/null
+			log "    $br: 512M pref window programmed"
+		fi
+	done
 
-    # Walk the sysfs path to find all bridges from root to this GPU
-    GPU_SYSFS=$(readlink -f /sys/bus/pci/devices/0000:$GPU_BUS 2>/dev/null)
-    if [ -z "$GPU_SYSFS" ]; then
-        log "ERROR: cannot resolve sysfs path for GPU $GPU_BUS"
-        idx=$((idx + 1))
-        continue
-    fi
-
-    BRIDGES=$(echo "$GPU_SYSFS" | tr '/' '\n' | grep '^0000:' | head -n-1 | sed 's/^0000://')
-    log "  bridge chain: $(echo $BRIDGES | tr '\n' ' ')-> $GPU_BUS"
-
-    # Program each bridge in this GPU's chain with its 64-bit pref window
-    for br in $BRIDGES; do
-        CLASS=$(cat /sys/bus/pci/devices/0000:$br/class 2>/dev/null)
-        if [ "${CLASS:0:6}" = "0x0604" ]; then
-            setpci -s "$br" 24.L=$REG24 2>/dev/null
-            setpci -s "$br" 28.L=00000040 2>/dev/null
-            setpci -s "$br" 2C.L=00000040 2>/dev/null
-            log "    $br: pref window programmed"
-        fi
-    done
-
-    # Program GPU BAR 0 (256MB, 64-bit prefetchable)
-    setpci -s "$GPU_BUS" COMMAND.W=0000
-    setpci -s "$GPU_BUS" 10.L=$BAR0_LO
-    setpci -s "$GPU_BUS" 14.L=00000040
-    setpci -s "$GPU_BUS" COMMAND.W=0007
-
-    B0LO=$(setpci -s "$GPU_BUS" 10.L)
-    B0HI=$(setpci -s "$GPU_BUS" 14.L)
-    log "  BAR 0 programmed: low=$B0LO high=$B0HI"
-
-    idx=$((idx + 1))
+	setpci -s "$GPU_BUS" COMMAND.W=0000
+	setpci -s "$GPU_BUS" 10.L=$BAR0_LO      # BAR0 low  (framebuffer)
+	setpci -s "$GPU_BUS" 14.L=00000040      # BAR0 high
+	setpci -s "$GPU_BUS" 18.L=$BAR2_LO      # BAR2 low  (doorbell)
+	setpci -s "$GPU_BUS" 1C.L=00000040      # BAR2 high
+	setpci -s "$GPU_BUS" COMMAND.W=0007
+	log "  $GPU_BUS BAR0=$(setpci -s $GPU_BUS 10.L)/$(setpci -s $GPU_BUS 14.L) BAR2=$(setpci -s $GPU_BUS 18.L)/$(setpci -s $GPU_BUS 1C.L)"
+	idx=$((idx + 1))
 done
 
-# Load kernel module to patch resource tree (handles all GPUs)
 log "Loading egpu_bar module..."
-modprobe egpu_bar 2>&1 || {
-    insmod /lib/modules/$(uname -r)/extra/egpu_bar.ko 2>&1 || {
-        log "ERROR: Failed to load egpu_bar"
-        exit 1
-    }
-}
+modprobe egpu_bar 2>&1 || insmod /lib/modules/$(uname -r)/extra/egpu_bar.ko 2>&1 || { log "ERROR: egpu_bar load failed"; exit 1; }
 
-# Load amdgpu driver (blacklisted from auto-loading)
 log "Loading amdgpu..."
 modprobe amdgpu 2>&1
-sleep 3
+sleep 4
 
-# Force high-performance power mode on every card (prevents mem clock idling at 96MHz)
 for dev in /sys/class/drm/card*/device/power_dpm_force_performance_level; do
-    [ -f "$dev" ] || continue
-    echo "high" > "$dev" 2>/dev/null && log "power mode high: $dev"
+	[ -f "$dev" ] && echo high > "$dev" 2>/dev/null && log "power mode high: $dev"
 done
-
-# Bind any GPU the auto-probe missed, then report
 for GPU_BUS in $GPU_BUSES; do
-    if [ ! -e "/sys/bus/pci/devices/0000:$GPU_BUS/drm" ]; then
-        echo "0000:$GPU_BUS" > /sys/bus/pci/drivers/amdgpu/bind 2>/dev/null
-        sleep 2
-    fi
+	if [ ! -e "/sys/bus/pci/devices/0000:$GPU_BUS/drm" ]; then
+		echo "0000:$GPU_BUS" > /sys/bus/pci/drivers/amdgpu/bind 2>/dev/null
+		sleep 2
+	fi
 done
 
-CARD_COUNT=$(ls -d /sys/class/drm/card[0-9]*/device/driver 2>/dev/null | while read p; do
-    readlink "$p" | grep -q amdgpu && echo x; done | wc -l)
+CARD_COUNT=$(ls -d /sys/class/drm/card[0-9]*/device/driver 2>/dev/null | while read p; do readlink "$p" | grep -q amdgpu && echo x; done | wc -l)
 if ls /dev/dri/card* >/dev/null 2>&1; then
-    log "SUCCESS: $CARD_COUNT amdgpu card(s) up; /dev/dri:"
-    ls -la /dev/dri/
+	log "SUCCESS: $CARD_COUNT amdgpu card(s) up; /dev/dri:"; ls -la /dev/dri/
 else
-    log "FAILED: No /dev/dri devices"
-    dmesg | grep -i "amdgpu\|egpu_bar" | tail -15
+	log "FAILED: no /dev/dri"; dmesg | grep -iE "amdgpu|egpu_bar|kiq|ring|-110|gfx_v10" | tail -18
 fi

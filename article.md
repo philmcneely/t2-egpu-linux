@@ -205,11 +205,27 @@ The entire setup - kernel module, boot scripts, systemd service, modprobe config
 
 Way back up top I said the second RX 6800 "hasn't been tested yet - it's the next step." It's tested now. And to be clear about what I was testing: this box was always a dedicated node for slow, unattended work, and the two-card plan (separate controllers, don't let the GPUs starve each other for bandwidth) was about running things *independently* - never about pooling 32GB into one big model (as much as I really would like to!). The `rebar=0` story earlier already tells you why pooling over Thunderbolt was never on the table - we can only expose 256MB through the BAR, and the two cards have no path to each other. The real big models live on the machines built for them. This one just needed a second set of hands.
 
-The second card went into a **Razer Core X** (not another AKiTiO - I used what I had), on the other Titan Ridge controller, exactly where the diagram said. Getting both up meant teaching the kernel module and boot script to stop assuming a single GPU - now they loop over every card and hand each its own 256MB window (card 0 at `0x4010000000`, card 1 at `0x4020000000`). That part went shockingly smoothly. Multi-GPU code is in [`dual-gpu/`](dual-gpu/).
+The second card went into a **Razer Core X** (not another AKiTiO - I used what I had), on the other Titan Ridge controller, exactly where the diagram said. Getting both up meant teaching the kernel module and boot script to stop assuming a single GPU - loop over every card, hand each its own window. I figured that was the whole job. It wasn't.
 
-Two things bit me (well Claude, as I was instructing it to do the work), worth writing down so they don't bite you:
+The first card came up fine. The second enumerated on the Thunderbolt bus, took its BAR programming, `amdgpu` grabbed it - and then died mid-init:
 
-- **The BAR programming only happens at boot.** I moved the first card to a different Thunderbolt port and it vanished - amdgpu failed with `-22`, no `/dev/dri`. Nothing was actually broken; the init script just runs once at boot and never re-ran after the card came up on a new bus. A reboot fixed it instantly. Swap a port or a cable, expect to reboot.
+```
+amdgpu 0000:82:00.0: SMU is initialized successfully!
+amdgpu 0000:82:00.0: ring kiq_0.2.1.0 test failed (-110)
+amdgpu 0000:82:00.0: hw_init of IP block <gfx_v10_0> failed -110
+amdgpu 0000:82:00.0: Fatal error during GPU init
+```
+
+`-110` is `ETIMEDOUT`. The GPU powered up, firmware loaded, the SMU (its power controller) initialized - and then the GFX ring's KIQ, the kernel interface queue the driver uses to talk to the command processor, timed out. The card was alive; the driver just couldn't hand it work.
+
+The chase burned through a few innocent suspects first. The PCIe link was clean - same 16 GT/s x16 as the working card, zero AER errors. Firmware was fine (the working card loads the same files). `pci=realloc` looked guilty - the working reference box doesn't carry it - but dropping it changed nothing. The tell was in `lspci -vv` on the dead card: its **doorbell BAR - BAR2, the little 2 MB region - sat at `0xc0000000`, *outside* its parent bridge's forwarding window**, and its **bus-mastering was off**. The KIQ ring rings a doorbell to poke the command processor; if the doorbell BAR isn't reachable, the poke lands nowhere and the ring test times out. `-110`, exactly.
+
+The single-card path never hits this: one card's BAR2 lands in a forwarded window by luck of the kernel's allocator. The second card's doesn't. And the original module only relocated **BAR0**, the framebuffer - it never touched **BAR2**. So it has to relocate the doorbell too: widen each card's window to 512 MB, put BAR0 at the base and BAR2 right behind it, and patch `resource[2]` in the kernel resource tree alongside `resource[0]`. This turned out to be the *identical* fix a sister box needed for its two Radeon VIIs - so it's platform-, not Vega/Navi-specific: any second AMD eGPU behind a Thunderbolt bridge on this hardware needs its doorbell BAR relocated by hand. With that in, both cards init clean - two `/dev/dri` render nodes, `BusMaster+` on both. Updated multi-GPU code is in [`dual-gpu/`](dual-gpu/).
+
+Three things bit me (well, Claude, as I was instructing it to do the work), worth writing down so they don't bite you:
+
+- **Relocate the doorbell BAR (BAR2), not just the framebuffer (BAR0).** This is the one that cost real time. The second card's doorbell BAR lands outside its bridge's forwarding window; miss it and you get `ring kiq_0 test failed (-110)` even though the card is powered and its firmware loaded. Widen the window to 512 MB and map both BARs; check `lspci -vv` shows `Region 2` inside the bridge window and `BusMaster+`.
+- **The BAR programming only happens at boot.** I moved the first card to a different Thunderbolt port and it vanished - amdgpu failed with `-22`, no `/dev/dri`. Nothing was actually broken; the init script just runs once at boot and never re-ran after the card came up on a new bus. A reboot fixed it instantly. Swap a port or a cable, expect to reboot. (Related: the second enclosure can take ~130 s into boot to authorize, so the boot script now waits for *both* cards before it loads amdgpu - a late card auto-probed with no BAR is what leaves it wedged.)
 - **Thunderbolt enclosures have to be *enrolled*, not just authorized.** I authorized the Core X live and it worked - until the next reboot, when it came back unauthorized and never hit the PCI bus. `boltctl enroll --policy auto` makes it stick.
 
 ### The numbers
