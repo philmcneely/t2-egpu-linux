@@ -458,34 +458,13 @@ If the machine is pingable but SSH is refused, it may be stuck at GRUB (recordfa
 ### NEVER do a full PCI rescan
 `echo 1 > /sys/bus/pci/rescan` will crash the machine every time on this hardware. Don't do it.
 
-### One card dead after a cold power cycle — `Unable to set WC memtype` / amdgpu `-22`
-On a **cold** power cycle the T2 firmware re-rolls the Thunderbolt bridge memory windows, and
-with two eGPUs it sometimes hands one card's bridge a window too small for its 256 MB BAR 0
-(observed on a dual-Radeon-VII 2018 mini, 2026-09-15: the `81:00.0` bridge got a **99 MB,
-32-bit** prefetchable window; the working card's bridge got a **64-bit** window up at
-`0x40_0000_0000`). The starved card gets **no BAR 0**, and:
-```
-dmesg:  amdgpu 0000:82:00.0: Fatal error during GPU init
-        [drm:amdgpu_bo_init] *ERROR* Unable to set WC memtype for the aperture base
-        amdgpu 0000:82:00.0: probe with driver amdgpu failed with error -22
-sudo lspci -vvs 82:00.0 | grep 'Region 0:'   →  MISSING
-ls /sys/class/drm/ | grep '^card[0-9]$'      →  only card0
-```
-**First check `pci=realloc` is on the cmdline** (`grep pci=realloc /proc/cmdline`) — it lets the
-kernel reassign the bridge windows into 64-bit space instead of trusting the firmware's roll, and
-it wins the lottery *more often*. But **`pci=realloc` is NOT deterministic on a two-GPU TB3 mini.**
-Measured across three reboots with it present (dual Radeon VII, 2026-09-15): one boot brought up
-both cards (BAR 0 at `0x4010000000` + `0x4030000000`), the next brought up only one (`82:00.0`
-failed `-22` again). **Do not reboot-loop hoping for both — that's gambling.**
-
-- **The deterministic fix is the [`dual-gpu/`](dual-gpu/) `egpu_bar.c` + `egpu-init.sh`** — it
-  `setpci`-programs each card's bridge window and BAR 0 to a fixed 256 MB 64-bit slot every boot
-  (card 0 `0x4010000000`, card 1 `0x4020000000`), so both cards come up regardless of the
-  firmware's roll. If you need *reliable* dual-GPU on a T2 mini, use that, not bare `pci=realloc`.
-- On the **TB2** 2013 Mac Pro `pci=realloc` does *nothing at all* (firmware window ~3 MB) — see
-  [`mac-pro-2013-tb2-failure.md`](mac-pro-2013-tb2-failure.md).
-- **Prevention:** never cold-cycle these boxes (`poweroff` + Wake-on-LAN instead), and don't let
-  `pci=realloc` drift out of `/etc/default/grub`. It's in [`grub-default`](grub-default).
+### Second eGPU appears "missing" right after a cold boot
+On a dual-eGPU box the second card (on the slower/farther TB controller) can take a minute or two
+longer to enumerate than the first. If `egpu-init` runs before it appears, you'll briefly see one
+card; the second binds shortly after on its own. **Wait a couple of minutes and re-check before
+concluding a card is dead.** Prefer a clean `poweroff` + Wake-on-LAN over a cold power-cycle, and
+resist reboot-looping to "get both faster" — repeated reboots can glitch the GPU SMU
+(`smu_v11_0_i2c_xfer ... NAK` in dmesg) and cause more trouble than the late card ever would.
 
 ## Architecture
 

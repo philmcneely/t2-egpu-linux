@@ -251,48 +251,29 @@ None of which matters for what this box is *for*. It was always the batch/async 
 
 Still sitting in a closet. Still drawing 300W. Still NUTS.
 
-### Postscript: the cold-boot lottery (and why `pci=realloc` isn't optional)
+### Postscript: the real dual-eGPU gotcha is patience, not another kernel flag
 
-Months later, on a sibling box — a 2018 mini with **two Radeon VIIs** instead of RX 6800s — I
-learned the hard way that the BAR fix has a second failure mode nobody had bitten me with yet.
-The box got **cold** power-cycled (pulled power, not a clean `poweroff`), and came back with
-**only one of the two cards working**. `dmesg` was blunt about it:
+Months later, on a sibling box — a 2018 mini with **two Radeon VIIs** — a cold power-cycle left it
+looking like only one card came up: `amdgpu ... failed with error -22`, one GPU missing from
+`/sys/class/drm`. The instinct is to start changing kernel parameters and rebooting. That instinct
+was wrong, and chasing it cost a whole night.
 
-```
-amdgpu 0000:82:00.0: Fatal error during GPU init
-[drm:amdgpu_bo_init] *ERROR* Unable to set WC memtype for the aperture base
-amdgpu 0000:82:00.0: probe with driver amdgpu failed with error -22
-```
+The actual cause was mundane: **the second card, on the farther Thunderbolt controller, simply
+enumerated a couple of minutes later than the first.** The boot-time BAR-programming ran before it
+appeared, so at first glance there was one card — and the second bound on its own shortly after.
+Both cards were fine; the check was just early.
 
-The dead card had **no BAR 0 at all**. Its Thunderbolt bridge had been handed a **99 MB, 32-bit**
-prefetchable window by the firmware — too small for the 256 MB aperture the GPU needs — while the
-*working* card's bridge got a roomy 64-bit window up at `0x40_0000_0000`. That's the whole bug:
-on a **cold** boot the T2 firmware lays the two bridge windows out differently each time, and
-sometimes it just doesn't leave room for the second card. It had worked for weeks because every
-prior boot happened to roll two good windows. This time it rolled one bad one — and a plain
-reboot kept rolling the same bad dice.
+What I learned the hard way:
 
-The first thing I reached for was a parameter that was *supposed* to already be there and had
-quietly drifted out of the box's GRUB config: **`pci=realloc`**. It tells the kernel to stop
-trusting the firmware's cramped windows and reassign the PCI resource tree itself. Add it,
-`update-grub`, reboot — and both cards came up with proper 256 MB / 64-bit BAR 0s.
+- **Wait before you conclude a card is dead.** Give a cold boot a few minutes and re-check
+  `/sys/class/drm` before touching anything.
+- **Don't reboot-loop, and don't bolt on `pci=realloc` when the `setpci` pinning in this repo is
+  already doing the job** — I did both, and they *fought* the pinning (BARs came back reshuffled,
+  then *both* cards failed `-22`). Repeated reboots also glitched the GPU's SMU
+  (`smu_v11_0_i2c_xfer ... NAK` in dmesg), which then hung model loads. The fix was to revert to
+  the stock config and **stop**.
+- **Prefer a clean `poweroff` + Wake-on-LAN over a cold power-cycle.** The late-enumeration
+  weirdness is a *cold*-boot thing; a cleanly-booted box that has both cards keeps them.
 
-And then I learned the humbling part: **it's not deterministic.** I rebooted a few more times, and
-`pci=realloc` present, one boot brought up both cards and the *next* brought up only one — the
-*other* card failing `-22` this time. It improves the odds by letting the kernel reallocate, but
-it does not *win* the firmware lottery every boot. Rebooting to "get both" is just pulling the
-lever again.
-
-Two things worth carrying forward:
-
-- **`pci=realloc` is a mitigation, not the fix.** The deterministic answer on a two-GPU T2 mini is
-  the `setpci` / kernel-module bridge rewrite from earlier in this repo (the [`dual-gpu/`](dual-gpu/)
-  variant), which *pins* each card a fixed 256 MB 64-bit BAR window every boot instead of hoping
-  the kernel's reallocator places both. `pci=realloc` alone leaves you rolling dice. (The 2013 Mac
-  Pro over TB2 is worse still: its firmware window is ~3 MB and `pci=realloc` does nothing at all —
-  same symptom, harder root cause.)
-- **Never cold-cycle these boxes.** A clean `poweroff` + Wake-on-LAN avoids the re-roll entirely.
-  The lottery is a *cold*-boot phenomenon; a running box that already has both cards keeps them.
-
-*I used Claude to help draft and edit this article. The dual-card testing, this epilogue, and the postscript were done with Claude as well.*
+*I used Claude to help draft and edit this article. The dual-card testing and this epilogue were done with Claude as well.*
 
