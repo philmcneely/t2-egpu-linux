@@ -471,19 +471,21 @@ dmesg:  amdgpu 0000:82:00.0: Fatal error during GPU init
 sudo lspci -vvs 82:00.0 | grep 'Region 0:'   →  MISSING
 ls /sys/class/drm/ | grep '^card[0-9]$'      →  only card0
 ```
-**Fix: make sure `pci=realloc` is on the kernel cmdline** (`grep pci=realloc /proc/cmdline`),
-then reboot. It lets the kernel reassign the bridge windows into 64-bit space itself instead of
-trusting the firmware's roll — after which **both** BAR 0s land at 256 MB / 64-bit
-(`0x4010000000`, `0x4030000000`) and `amdgpu` binds both. A plain reboot **without** `pci=realloc`
-just re-rolls the same bad hand.
+**First check `pci=realloc` is on the cmdline** (`grep pci=realloc /proc/cmdline`) — it lets the
+kernel reassign the bridge windows into 64-bit space instead of trusting the firmware's roll, and
+it wins the lottery *more often*. But **`pci=realloc` is NOT deterministic on a two-GPU TB3 mini.**
+Measured across three reboots with it present (dual Radeon VII, 2026-09-15): one boot brought up
+both cards (BAR 0 at `0x4010000000` + `0x4030000000`), the next brought up only one (`82:00.0`
+failed `-22` again). **Do not reboot-loop hoping for both — that's gambling.**
 
-- On this **TB3 2018 mini, `pci=realloc` alone is sufficient** for dual Radeon VII — the custom
-  `egpu_bar.c`/`setpci` bridge rewrite is not required just to get BAR 0 assigned. (Contrast the
-  **TB2** 2013 Mac Pro, where `pci=realloc` does *nothing* because the firmware window is only
-  ~3 MB — see [`mac-pro-2013-tb2-failure.md`](mac-pro-2013-tb2-failure.md).)
+- **The deterministic fix is the [`dual-gpu/`](dual-gpu/) `egpu_bar.c` + `egpu-init.sh`** — it
+  `setpci`-programs each card's bridge window and BAR 0 to a fixed 256 MB 64-bit slot every boot
+  (card 0 `0x4010000000`, card 1 `0x4020000000`), so both cards come up regardless of the
+  firmware's roll. If you need *reliable* dual-GPU on a T2 mini, use that, not bare `pci=realloc`.
+- On the **TB2** 2013 Mac Pro `pci=realloc` does *nothing at all* (firmware window ~3 MB) — see
+  [`mac-pro-2013-tb2-failure.md`](mac-pro-2013-tb2-failure.md).
 - **Prevention:** never cold-cycle these boxes (`poweroff` + Wake-on-LAN instead), and don't let
-  `pci=realloc` drift out of `/etc/default/grub` — a box that loses it becomes a cold-boot
-  lottery. It's in [`grub-default`](grub-default) for this reason.
+  `pci=realloc` drift out of `/etc/default/grub`. It's in [`grub-default`](grub-default).
 
 ## Architecture
 

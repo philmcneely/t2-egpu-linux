@@ -272,22 +272,27 @@ sometimes it just doesn't leave room for the second card. It had worked for week
 prior boot happened to roll two good windows. This time it rolled one bad one — and a plain
 reboot kept rolling the same bad dice.
 
-The fix turned out to be a parameter that was *supposed* to already be there and had quietly
-drifted out of the box's GRUB config: **`pci=realloc`**. It tells the kernel to stop trusting the
-firmware's cramped windows and reassign the PCI resource tree itself. Add it, `update-grub`,
-reboot — and both cards came up with proper 256 MB / 64-bit BAR 0s (`0x4010000000` and
-`0x4030000000`), every time since.
+The first thing I reached for was a parameter that was *supposed* to already be there and had
+quietly drifted out of the box's GRUB config: **`pci=realloc`**. It tells the kernel to stop
+trusting the firmware's cramped windows and reassign the PCI resource tree itself. Add it,
+`update-grub`, reboot — and both cards came up with proper 256 MB / 64-bit BAR 0s.
+
+And then I learned the humbling part: **it's not deterministic.** I rebooted a few more times, and
+`pci=realloc` present, one boot brought up both cards and the *next* brought up only one — the
+*other* card failing `-22` this time. It improves the odds by letting the kernel reallocate, but
+it does not *win* the firmware lottery every boot. Rebooting to "get both" is just pulling the
+lever again.
 
 Two things worth carrying forward:
 
-- **`pci=realloc` alone was enough here.** On this TB3 mini I didn't need the `setpci`/kernel-module
-  bridge rewrite just to get BAR 0 assigned — the kernel's own reallocator did it once told to.
-  (The 2013 Mac Pro over TB2 is the opposite story: its firmware window is ~3 MB and `pci=realloc`
-  does nothing, which is why *that* box needs the manual register surgery. Same symptom, different
-  root cause, opposite fix.)
+- **`pci=realloc` is a mitigation, not the fix.** The deterministic answer on a two-GPU T2 mini is
+  the `setpci` / kernel-module bridge rewrite from earlier in this repo (the [`dual-gpu/`](dual-gpu/)
+  variant), which *pins* each card a fixed 256 MB 64-bit BAR window every boot instead of hoping
+  the kernel's reallocator places both. `pci=realloc` alone leaves you rolling dice. (The 2013 Mac
+  Pro over TB2 is worse still: its firmware window is ~3 MB and `pci=realloc` does nothing at all —
+  same symptom, harder root cause.)
 - **Never cold-cycle these boxes.** A clean `poweroff` + Wake-on-LAN avoids the re-roll entirely.
-  The lottery is a *cold*-boot phenomenon; warm reboots inherit a layout that already works — as
-  long as `pci=realloc` is there to keep it deterministic.
+  The lottery is a *cold*-boot phenomenon; a running box that already has both cards keeps them.
 
 *I used Claude to help draft and edit this article. The dual-card testing, this epilogue, and the postscript were done with Claude as well.*
 
