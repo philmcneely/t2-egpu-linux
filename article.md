@@ -251,5 +251,43 @@ None of which matters for what this box is *for*. It was always the batch/async 
 
 Still sitting in a closet. Still drawing 300W. Still NUTS.
 
-*I used Claude to help draft and edit this article. The dual-card testing and this epilogue were done with Claude as well.*
+### Postscript: the cold-boot lottery (and why `pci=realloc` isn't optional)
+
+Months later, on a sibling box — a 2018 mini with **two Radeon VIIs** instead of RX 6800s — I
+learned the hard way that the BAR fix has a second failure mode nobody had bitten me with yet.
+The box got **cold** power-cycled (pulled power, not a clean `poweroff`), and came back with
+**only one of the two cards working**. `dmesg` was blunt about it:
+
+```
+amdgpu 0000:82:00.0: Fatal error during GPU init
+[drm:amdgpu_bo_init] *ERROR* Unable to set WC memtype for the aperture base
+amdgpu 0000:82:00.0: probe with driver amdgpu failed with error -22
+```
+
+The dead card had **no BAR 0 at all**. Its Thunderbolt bridge had been handed a **99 MB, 32-bit**
+prefetchable window by the firmware — too small for the 256 MB aperture the GPU needs — while the
+*working* card's bridge got a roomy 64-bit window up at `0x40_0000_0000`. That's the whole bug:
+on a **cold** boot the T2 firmware lays the two bridge windows out differently each time, and
+sometimes it just doesn't leave room for the second card. It had worked for weeks because every
+prior boot happened to roll two good windows. This time it rolled one bad one — and a plain
+reboot kept rolling the same bad dice.
+
+The fix turned out to be a parameter that was *supposed* to already be there and had quietly
+drifted out of the box's GRUB config: **`pci=realloc`**. It tells the kernel to stop trusting the
+firmware's cramped windows and reassign the PCI resource tree itself. Add it, `update-grub`,
+reboot — and both cards came up with proper 256 MB / 64-bit BAR 0s (`0x4010000000` and
+`0x4030000000`), every time since.
+
+Two things worth carrying forward:
+
+- **`pci=realloc` alone was enough here.** On this TB3 mini I didn't need the `setpci`/kernel-module
+  bridge rewrite just to get BAR 0 assigned — the kernel's own reallocator did it once told to.
+  (The 2013 Mac Pro over TB2 is the opposite story: its firmware window is ~3 MB and `pci=realloc`
+  does nothing, which is why *that* box needs the manual register surgery. Same symptom, different
+  root cause, opposite fix.)
+- **Never cold-cycle these boxes.** A clean `poweroff` + Wake-on-LAN avoids the re-roll entirely.
+  The lottery is a *cold*-boot phenomenon; warm reboots inherit a layout that already works — as
+  long as `pci=realloc` is there to keep it deterministic.
+
+*I used Claude to help draft and edit this article. The dual-card testing, this epilogue, and the postscript were done with Claude as well.*
 

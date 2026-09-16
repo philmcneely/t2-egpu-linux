@@ -458,6 +458,33 @@ If the machine is pingable but SSH is refused, it may be stuck at GRUB (recordfa
 ### NEVER do a full PCI rescan
 `echo 1 > /sys/bus/pci/rescan` will crash the machine every time on this hardware. Don't do it.
 
+### One card dead after a cold power cycle — `Unable to set WC memtype` / amdgpu `-22`
+On a **cold** power cycle the T2 firmware re-rolls the Thunderbolt bridge memory windows, and
+with two eGPUs it sometimes hands one card's bridge a window too small for its 256 MB BAR 0
+(observed on a dual-Radeon-VII 2018 mini, 2026-09-15: the `81:00.0` bridge got a **99 MB,
+32-bit** prefetchable window; the working card's bridge got a **64-bit** window up at
+`0x40_0000_0000`). The starved card gets **no BAR 0**, and:
+```
+dmesg:  amdgpu 0000:82:00.0: Fatal error during GPU init
+        [drm:amdgpu_bo_init] *ERROR* Unable to set WC memtype for the aperture base
+        amdgpu 0000:82:00.0: probe with driver amdgpu failed with error -22
+sudo lspci -vvs 82:00.0 | grep 'Region 0:'   →  MISSING
+ls /sys/class/drm/ | grep '^card[0-9]$'      →  only card0
+```
+**Fix: make sure `pci=realloc` is on the kernel cmdline** (`grep pci=realloc /proc/cmdline`),
+then reboot. It lets the kernel reassign the bridge windows into 64-bit space itself instead of
+trusting the firmware's roll — after which **both** BAR 0s land at 256 MB / 64-bit
+(`0x4010000000`, `0x4030000000`) and `amdgpu` binds both. A plain reboot **without** `pci=realloc`
+just re-rolls the same bad hand.
+
+- On this **TB3 2018 mini, `pci=realloc` alone is sufficient** for dual Radeon VII — the custom
+  `egpu_bar.c`/`setpci` bridge rewrite is not required just to get BAR 0 assigned. (Contrast the
+  **TB2** 2013 Mac Pro, where `pci=realloc` does *nothing* because the firmware window is only
+  ~3 MB — see [`mac-pro-2013-tb2-failure.md`](mac-pro-2013-tb2-failure.md).)
+- **Prevention:** never cold-cycle these boxes (`poweroff` + Wake-on-LAN instead), and don't let
+  `pci=realloc` drift out of `/etc/default/grub` — a box that loses it becomes a cold-boot
+  lottery. It's in [`grub-default`](grub-default) for this reason.
+
 ## Architecture
 
 ```
