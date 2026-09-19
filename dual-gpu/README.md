@@ -85,3 +85,41 @@ A single large model split across both cards loads (VRAM fills on both) then
 llama-server segfaults — no GPU peer-to-peer over the separate Thunderbolt
 controllers. See [`benchmark-results.md`](benchmark-results.md). Use 2×
 independent instances instead.
+
+## Two independent llama.cpp instances hang: the 2nd runner spins on CPU (HIP graphs)
+
+Running **two `llama-server` processes** — one per card, the "2× independent instances" pattern above —
+deadlocks the **second** one on ROCm/HIP when **HIP graphs are enabled** (the default). Symptoms:
+
+- One instance serves fine; the other loads its weights to VRAM but its `/health` stays `"Loading model"`
+  **forever**, burning a steady ~200% CPU. `strace` shows **≈zero syscalls** → it's spinning in userspace
+  (effectively running on CPU). It is NOT a JIT compile (the `comgr` cache is static).
+
+This is a known upstream bug: [ggml-org/llama.cpp #29098](https://github.com/ggml-org/llama.cpp/issues/29098)
+(two processes + HIP graphs → 100% GPU/lockup), [#12991](https://github.com/ggml-org/llama.cpp/issues/12991),
+and the residual [ROCm #6522](https://github.com/ROCm/ROCm/issues/6522) (HSA `AsyncEventsLoop` livelock).
+Both processes share `/dev/kfd`, so **docker-per-card isolation does NOT help** — the contention is in the
+HSA runtime, not docker.
+
+### Fix: build llama.cpp with HIP graphs OFF
+
+The runtime env `GGML_CUDA_DISABLE_GRAPHS=1` only *halves* the spin (the prebuilt images compile graphs in).
+The real fix is a **build flag**:
+
+```sh
+HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
+  cmake -S . -B build -DGGML_HIP=ON -DAMDGPU_TARGETS=gfx906 -DGGML_HIP_GRAPHS=OFF \
+        -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF
+cmake --build build -j"$(nproc)" --target llama-server
+```
+
+With graphs off, the 2nd runner spins ~2–8 min through the graph-build warmup and then **completes on the
+GPU** (CPU→0, healthy) instead of forever. Notes:
+
+- Build it *FROM* your working gfx906 image so you keep the gfx906 rocblas (don't lose the fast backend).
+- The 2nd runner's warmup is **slower** (~8.5 min observed) than the 1st because it contends while the 1st
+  serves — a health/CPU watchdog must be patient with a not-yet-healthy container, or it kills the legit warmup.
+- Give each runner `--ulimit memlock=-1` (ROCm SVM pinning; the docker default 8 KB makes it fail
+  `SVM mapping failed, exceeds resident system memory limit`) and a `--cpus` cap so a spin can never starve the box.
+- Things that did **not** help: `HSA_TOOLS_DISABLE_REGISTER=1` (gfx1151-only), `GPU_MAX_HW_QUEUES=1`, `HSA_XNACK=1`
+  (Vega20 target is `xnack-`).
