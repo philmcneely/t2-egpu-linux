@@ -1,6 +1,6 @@
 # Two Models, One Box, and the Bug That Ran My Second GPU on the CPU
 
-*(Episode 3 of the Mac-Mini-eGPU saga. [Episode 1](article.md) was getting a single AMD GPU to do inference over Thunderbolt on a T2 Mac Mini at all; the earlier chapters cover that win and the expensive Thunderbolt-2 dead-end that came before it. This one is the sequel problem: making **two** cards in **one** box each serve a model, full-time, without the whole thing falling over. It took a genuinely embarrassing amount of flailing to get right, and the root cause was not even slightly what I assumed.)*
+*(Episode 3 of the Mac-Mini-eGPU saga. [Episode 1](article.md) was getting a single AMD GPU to do inference over Thunderbolt on a T2 Mac Mini at all. [Episode 2](dual-gpu/) was getting **both** cards enumerated and addressable on one box — the second card's doorbell BAR lands outside its bridge window, so it took relocating BAR2, not just BAR0, plus a boot wait long enough to survive a cold start. This one is the next problem: making those two cards each **serve a model**, full-time, without the whole thing falling over. It took a genuinely embarrassing amount of flailing to get right, and the root cause was not even slightly what I assumed.)*
 
 ## The setup
 
