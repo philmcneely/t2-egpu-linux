@@ -6,7 +6,7 @@ I had a Mac Mini 2018 with 64GB of RAM, an AMD RX 6800 with 16GB of VRAM, and a 
 
 It took weeks, two reloaded machines, and a custom kernel module. But it works.
 
-> **Sequel:** getting *two* cards in one box to each serve a model — and the bug that made the second one silently run on the CPU — is [Episode 2](article-2-two-models-one-cpu-spin.md).
+> **Sequel:** getting *two* cards in one box to each serve a model — and the bug that made the second one silently run on the CPU — is [Episode 3](article-3-two-models-one-cpu-spin.md).
 
 ## The Expensive Mistake: Starting with the Wrong Machine
 
