@@ -6,6 +6,8 @@ I had a Mac Mini 2018 with 64GB of RAM, an AMD RX 6800 with 16GB of VRAM, and a 
 
 It took weeks, two reloaded machines, and a custom kernel module. But it works.
 
+> **Sequel:** getting *two* cards in one box to each serve a model — and the bug that made the second one silently run on the CPU — is [Episode 2](article-2-two-models-one-cpu-spin.md).
+
 ## The Expensive Mistake: Starting with the Wrong Machine
 
 I didn't start with the Mac Mini. I started with a 2013 Mac Pro - the "trash can." It had 128GB of RAM, a 12-core Xeon, and six Thunderbolt 2 ports. Sequoia is the last macOS it can run, and it has its issues - that path felt dead. I wanted to use the eGPU hardware I had, so I put Ubuntu on it. It worked - the Xeon and 128GB of RAM were usable again.
