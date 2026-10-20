@@ -8,6 +8,8 @@
 #     BAR2 -> base+0x10000000 (2MB)     reg 18/1C
 # Window math must match egpu_bar.c.
 LOG_TAG="egpu-init"; log(){ logger -t "$LOG_TAG" "$1"; echo "$1"; }
+# Needs root: setpci writes, /sys writes, modprobe/insmod. Fail loudly instead of silently.
+[ "$EUID" -eq 0 ] || { log "ERROR: must run as root (setpci, /sys writes, modprobe/insmod); got EUID=$EUID"; exit 1; }
 log "=== eGPU Init (Radeon VII + doorbell BAR2) ==="
 
 # Wait for BOTH Radeon VIIs to enumerate (the two TB enclosures authorize at
