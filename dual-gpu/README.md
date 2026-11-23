@@ -33,6 +33,28 @@ sudo chmod +x /usr/local/bin/egpu-init.sh
 sudo reboot     # BAR programming is boot-time only
 ```
 
+## Checks before anything loads
+
+`egpu-init.sh` reads back every bridge window and both BARs after writing them, per card.
+
+- **A card whose registers do not read back is skipped.** Its memory decode stays off and its `driver_override` is set to `none`, so amdgpu never probes it. The other card still comes up.
+- **A card amdgpu already drives is not reprogrammed.** Nor is any card that shares a bridge with it.
+- **After all cards are written, each one is checked again.** If two cards share a bridge, the second write moves the first card's window, and the first card is dropped instead of loading behind a window that no longer reaches it.
+- **No modules load** unless at least one card passed.
+- **Each card's HDMI audio function (`.1`) is unbound.**
+- **With no card on the bus,** the script logs "no eGPU attached" and exits 0.
+
+Exit `1` means cards were found but none came up. Set `EGPU_EXPECT=1` for a single card.
+
+Check a running box without writing anything:
+
+```sh
+sudo EGPU_VERIFY_ONLY=1 /usr/local/bin/egpu-init.sh
+#   45:00.0 OK: 7 bridges + BAR0/BAR2 match
+#   82:00.0 OK: 7 bridges + BAR0/BAR2 match
+# VERIFY: all cards match
+```
+
 ## Gotchas
 
 - **Relocate the doorbell BAR (BAR2), not just BAR0.** This is the one that costs

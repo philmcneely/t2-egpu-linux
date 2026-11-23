@@ -8,7 +8,7 @@ GRUB_TIMEOUT_STYLE=hidden
 GRUB_TIMEOUT=5
 GRUB_DISTRIBUTOR=`( . /etc/os-release; echo ${NAME:-Ubuntu} ) 2>/dev/null || echo Ubuntu`
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash vfio-pci.ids=8086:3e9b amdgpu.dc=0 amdgpu.runpm=0 amdgpu.rebar=0"
-GRUB_CMDLINE_LINUX="pm_async=off intel_iommu=on iommu=pt pci=realloc pcie_ports=native pcie_aspm=off pcie_port_pm=off"
+GRUB_CMDLINE_LINUX="pm_async=off intel_iommu=on iommu=pt pcie_ports=native pcie_aspm=off pcie_port_pm=off"
 
 # If your computer has multiple operating systems installed, then you
 # probably want to run os-prober. However, if your computer is a host
