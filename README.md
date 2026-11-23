@@ -29,7 +29,7 @@ The solution is a three-layer approach:
 
 The firmware's prefetchable window sits below 4 GiB and is 224 MB. Navi 21's smallest BAR 0 is 256 MB, so the card cannot fit there whatever you resize it to. This guide places the window in the host bridge's 64-bit space at `0x4010000000` instead. On the Mac Mini 2018 that works. Both RX 6800s on the dual-card box run inference around the clock with their framebuffer and doorbell BARs above 4 GiB.
 
-Other T2 Macs behave differently. On a MacBookPro16,1, Antonio Telesca found that the T2 hard-hangs the machine on any eGPU memory access above 4 GiB. For NVIDIA cards he shrinks BAR 1 to 64 MiB with Resizable BAR so every BAR fits below 4 GiB: [TelescaAntonio/t2-egpu-nvidia](https://github.com/TelescaAntonio/t2-egpu-nvidia). See also [t2linux issue #189](https://github.com/t2linux/T2-Debian-and-Ubuntu-Kernel/issues/189). If you have an NVIDIA card, or a MacBook where the above-4 GiB window hangs, start there. That method relies on a full PCI rescan, which crashes the Mac Mini (see Troubleshooting), so it is not used here.
+Other T2 Macs behave differently. On a MacBookPro16,1, Antonio Telesca found that the T2 hard-hangs the machine on any eGPU memory access above 4 GiB. For NVIDIA cards he shrinks BAR 1 to 64 MiB with Resizable BAR so every BAR fits below 4 GiB: [TelescaAntonio/t2-egpu-nvidia](https://github.com/TelescaAntonio/t2-egpu-nvidia). See also [t2linux issue #189](https://github.com/t2linux/T2-Debian-and-Ubuntu-Kernel/issues/189). If you have an NVIDIA card, or a MacBook where the above-4 GiB window hangs, start there. Its rescan step would not help an RX 6800 anyway. After a rescan the kernel places BARs inside the firmware's window, and a 256 MB BAR 0 does not fit in 224 MB.
 
 ## Prerequisites
 
@@ -409,8 +409,10 @@ Missing `GRUB_RECORDFAIL_TIMEOUT`. Ubuntu's default is to wait forever after a f
 ### SSH not available after reboot
 If the machine is pingable but SSH is refused, it may be stuck at GRUB (recordfail) or a display manager is hanging. For headless operation, set `GRUB_TIMEOUT_STYLE=hidden`.
 
-### NEVER do a full PCI rescan
-`echo 1 > /sys/bus/pci/rescan` will crash the machine every time on this hardware. Don't do it. This is why the setup patches the kernel's resource tree with a module instead of removing the bridge and rescanning, which is how the [NVIDIA method](https://github.com/TelescaAntonio/t2-egpu-nvidia) gets the kernel to re-read the BARs on a MacBookPro16,1.
+### NEVER do a full PCI rescan on a running machine
+`echo 1 > /sys/bus/pci/rescan` crashed a Mac Pro 2013 (Thunderbolt 2) every time ([write-up](mac-pro-2013-tb2-failure.md)). It also crashed the dual-card Mac Mini once, when it ran on a live system: one card bound to amdgpu behind the hand-programmed window, the second enclosure absent. Don't run it on a machine with a card up.
+
+The [NVIDIA method](https://github.com/TelescaAntonio/t2-egpu-nvidia) does rescan on a MacBookPro16,1, but under different conditions. Its script runs at boot before any GPU driver is loaded, turns off driver autoprobe, and removes the eGPU's bridge subtree first. The rescan then rebuilds only that subtree, with no driver behind it. That sequence has not been tried on the Mac Mini.
 
 ### Second eGPU appears "missing" right after a cold boot
 On a dual-eGPU box the second card (on the slower/farther TB controller) can take a minute or two
