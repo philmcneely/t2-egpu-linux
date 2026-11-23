@@ -63,11 +63,11 @@ GRUB_DEFAULT=0
 GRUB_TIMEOUT_STYLE=hidden
 GRUB_TIMEOUT=5
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash vfio-pci.ids=8086:3e9b amdgpu.dc=0 amdgpu.runpm=0 amdgpu.rebar=0"
-GRUB_CMDLINE_LINUX="pm_async=off intel_iommu=on iommu=pt pcie_ports=native pcie_aspm=off pcie_port_pm=off"
+GRUB_CMDLINE_LINUX="pm_async=off intel_iommu=on iommu=pt pci=realloc pcie_ports=native pcie_aspm=off pcie_port_pm=off"
 GRUB_RECORDFAIL_TIMEOUT=5
 ```
 
-Leave out `pci=realloc`. Earlier versions of this guide set it. It makes the kernel reassign bridge windows on its own, which fights the manual BAR programming in Step 4, and the running machines boot without it.
+`pci=realloc` is part of the single-card configuration this guide was built and tested with. Whether a single card needs it has not been tested. **With two eGPUs, leave it out.** On the dual RX 6800 Mac Mini it broke the whole BAR tree and took down the working card too. The dual-card setups in [`dual-gpu/`](dual-gpu/) and [`radeon-vii/`](radeon-vii/) boot without it.
 
 ### What each parameter does
 
@@ -84,6 +84,7 @@ Leave out `pci=realloc`. Earlier versions of this guide set it. It makes the ker
 |-----------|---------|
 | `pm_async=off` | Synchronous power management during boot — prevents TB race conditions |
 | `intel_iommu=on iommu=pt` | IOMMU in passthrough mode — required for vfio-pci |
+| `pci=realloc` | Lets the kernel reallocate PCI resources. Single card only: drop it with two eGPUs (see above) |
 | `pcie_ports=native` | Native PCIe port services — required for TB hotplug |
 | `pcie_aspm=off` | **CRITICAL.** Disables PCIe Active State Power Management. Without this, the Thunderbolt link fails to establish. |
 | `pcie_port_pm=off` | Disables PCIe port power management |
