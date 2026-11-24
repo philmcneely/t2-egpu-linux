@@ -9,6 +9,11 @@ Running an AMD RX 6800 over Thunderbolt 3 on a Mac Mini 2018 with Ubuntu Linux f
 - **AKiTiO Node Titan** Thunderbolt 3 eGPU enclosure
 - **Ubuntu 24.04** with [T2 Linux kernel](https://github.com/t2linux/linux-t2-patches) (7.0.9-1-t2-noble)
 
+This page walks through the single-card setup. Two more setups live in their own folders:
+
+- [`dual-gpu/`](dual-gpu/): two RX 6800s, one per Thunderbolt controller, on the same Mac Mini. Each card gets a 512 MB window that maps both BAR 0 and the doorbell BAR 2. This is the version running in production.
+- [`radeon-vii/`](radeon-vii/): two Radeon VIIs (Vega 20) on a second Mac Mini 2018.
+
 ## The Problem
 
 The T2 Mac Mini's firmware allocates only 224MB of prefetchable memory for the entire Thunderbolt domain. The RX 6800's BAR 0 needs at minimum 256MB. The GPU shows up in `lspci` but the amdgpu driver can't enable it — the kernel's PCIe resource tree doesn't have a valid memory window.
@@ -20,6 +25,12 @@ The solution is a three-layer approach:
 2. **Kernel module** — Patch the kernel's internal resource tree to match
 3. **Systemd service** — Automate everything on boot
 
+### Why the BAR goes above 4 GiB
+
+The firmware's prefetchable window sits below 4 GiB and is 224 MB. Navi 21's smallest BAR 0 is 256 MB, so the card cannot fit there whatever you resize it to. This guide places the window in the host bridge's 64-bit space at `0x4010000000` instead. On the Mac Mini 2018 that works. Both RX 6800s on the dual-card box run inference around the clock with their framebuffer and doorbell BARs above 4 GiB.
+
+Other T2 Macs behave differently. On a MacBookPro16,1, Antonio Telesca found that the T2 hard-hangs the machine on any eGPU memory access above 4 GiB. For NVIDIA cards he shrinks BAR 1 to 64 MiB with Resizable BAR so every BAR fits below 4 GiB: [TelescaAntonio/t2-egpu-nvidia](https://github.com/TelescaAntonio/t2-egpu-nvidia). See also [t2linux issue #189](https://github.com/t2linux/T2-Debian-and-Ubuntu-Kernel/issues/189). If you have an NVIDIA card, or a MacBook where the above-4 GiB window hangs, start there. Its rescan step would not help an RX 6800 anyway. After a rescan the kernel places BARs inside the firmware's window, and a 256 MB BAR 0 does not fit in 224 MB.
+
 ## Prerequisites
 
 Install the T2 Linux kernel from [t2linux.org](https://wiki.t2linux.org). The generic Ubuntu kernel may work for basic functionality but the T2 kernel includes drivers for the Mac's keyboard, trackpad, and other T2-specific hardware.
@@ -29,6 +40,8 @@ Install the T2 Linux kernel from [t2linux.org](https://wiki.t2linux.org). The ge
 uname -r
 # Should show something like: 7.0.9-1-t2-noble
 ```
+
+This setup was built and tested on 7.0.9-1-t2-noble. The kernel module is built against one kernel, so rebuild and reinstall it after every kernel update (Step 3), or `egpu-init` will fail to load `egpu_bar` and stop before loading amdgpu.
 
 You'll need kernel headers for building the module:
 ```bash
@@ -54,6 +67,8 @@ GRUB_CMDLINE_LINUX="pm_async=off intel_iommu=on iommu=pt pci=realloc pcie_ports=
 GRUB_RECORDFAIL_TIMEOUT=5
 ```
 
+`pci=realloc` is part of the single-card configuration this guide was built and tested with. Whether a single card needs it has not been tested. **With two eGPUs, leave it out.** On the dual RX 6800 Mac Mini it broke the whole BAR tree and took down the working card too. The dual-card setups in [`dual-gpu/`](dual-gpu/) and [`radeon-vii/`](radeon-vii/) boot without it.
+
 ### What each parameter does
 
 **GRUB_CMDLINE_LINUX_DEFAULT:**
@@ -69,7 +84,7 @@ GRUB_RECORDFAIL_TIMEOUT=5
 |-----------|---------|
 | `pm_async=off` | Synchronous power management during boot — prevents TB race conditions |
 | `intel_iommu=on iommu=pt` | IOMMU in passthrough mode — required for vfio-pci |
-| `pci=realloc` | Allows kernel to reallocate PCI resources |
+| `pci=realloc` | Lets the kernel reallocate PCI resources. Single card only: drop it with two eGPUs (see above) |
 | `pcie_ports=native` | Native PCIe port services — required for TB hotplug |
 | `pcie_aspm=off` | **CRITICAL.** Disables PCIe Active State Power Management. Without this, the Thunderbolt link fails to establish. |
 | `pcie_port_pm=off` | Disables PCIe port power management |
@@ -243,111 +258,48 @@ sudo cp egpu_bar.ko /lib/modules/$(uname -r)/extra/
 sudo depmod -a
 ```
 
-## Step 4: Create the Boot Init Script
+## Step 4: Install the Boot Init Script
 
-Create `/usr/local/bin/egpu-init.sh`:
+Install [`egpu-init.sh`](egpu-init.sh) from this repo:
 
 ```bash
-#!/bin/bash
-# eGPU BAR initialization for RX 6800 on Mac Mini 2018 (T2)
-# Programs bridge pref windows + GPU BAR 0 to 64-bit space,
-# loads kernel module to patch resource tree, then loads amdgpu.
-
-LOG_TAG="egpu-init"
-log() { logger -t "$LOG_TAG" "$1"; echo "$1"; }
-
-log "=== eGPU Init Starting ==="
-
-# Wait for Thunderbolt GPU to appear (up to 60 seconds)
-GPU_BUS=""
-for i in $(seq 1 30); do
-    GPU_BUS=$(lspci -d 1002:73bf 2>/dev/null | head -1 | awk '{print $1}')
-    [ -n "$GPU_BUS" ] && break
-    sleep 2
-done
-
-if [ -z "$GPU_BUS" ]; then
-    log "ERROR: RX 6800 not found after 60s"
-    exit 1
-fi
-log "GPU found at $GPU_BUS"
-
-# Walk the sysfs path to find all bridges from root to GPU
-GPU_SYSFS=$(readlink -f /sys/bus/pci/devices/0000:$GPU_BUS 2>/dev/null)
-if [ -z "$GPU_SYSFS" ]; then
-    log "ERROR: Cannot resolve sysfs path for GPU"
-    exit 1
-fi
-
-# Extract bridge BDFs from sysfs path (all PCI devices except the GPU itself)
-BRIDGES=$(echo "$GPU_SYSFS" | tr '/' '\n' | grep '^0000:' | head -n-1 | sed 's/^0000://')
-log "Bridge chain: $BRIDGES -> $GPU_BUS"
-
-# Program all bridges with 64-bit pref window: 0x4010000000-0x401FFFFFFF
-# Register 0x24 = Prefetchable Memory Base/Limit (bits 31:16 = limit, 15:0 = base)
-# Register 0x28 = Prefetchable Base Upper 32 bits
-# Register 0x2C = Prefetchable Limit Upper 32 bits
-log "Programming bridge pref windows..."
-for br in $BRIDGES; do
-    CLASS=$(cat /sys/bus/pci/devices/0000:$br/class 2>/dev/null)
-    if [ "${CLASS:0:6}" = "0x0604" ]; then
-        setpci -s "$br" 24.L=1FF11001 2>/dev/null   # base=0x10010000, limit=0x1FF10000
-        setpci -s "$br" 28.L=00000040 2>/dev/null   # upper base = 0x40
-        setpci -s "$br" 2C.L=00000040 2>/dev/null   # upper limit = 0x40
-        log "  $br: pref -> 0x4010000000-0x401FFFFFFF"
-    fi
-done
-
-# Program GPU BAR 0 to 0x4010000000 (256MB, 64-bit prefetchable)
-# Disable bus mastering + memory access during BAR programming
-log "Programming GPU BAR 0..."
-setpci -s "$GPU_BUS" COMMAND.W=0000          # disable everything
-setpci -s "$GPU_BUS" 10.L=1000000C           # BAR 0 low: addr + 64-bit + prefetchable flags
-setpci -s "$GPU_BUS" 14.L=00000040           # BAR 0 high: 0x40
-setpci -s "$GPU_BUS" COMMAND.W=0007          # re-enable IO + Mem + BusMaster
-
-BAR0_LO=$(setpci -s "$GPU_BUS" 10.L)
-BAR0_HI=$(setpci -s "$GPU_BUS" 14.L)
-log "BAR 0 programmed: low=$BAR0_LO high=$BAR0_HI"
-
-# Load kernel module to patch resource tree
-log "Loading egpu_bar module..."
-modprobe egpu_bar 2>&1 || {
-    insmod /lib/modules/$(uname -r)/extra/egpu_bar.ko 2>&1 || {
-        log "ERROR: Failed to load egpu_bar"
-        exit 1
-    }
-}
-
-# Load amdgpu driver (blacklisted from auto-loading)
-log "Loading amdgpu..."
-modprobe amdgpu 2>&1
-sleep 3
-
-# Check result
-if ls /dev/dri/card* >/dev/null 2>&1; then
-    log "SUCCESS: eGPU initialized"
-    ls -la /dev/dri/
-else
-    echo "0000:$GPU_BUS" > /sys/bus/pci/drivers/amdgpu/bind 2>/dev/null
-    sleep 3
-    if ls /dev/dri/card* >/dev/null 2>&1; then
-        log "SUCCESS: eGPU initialized (manual bind)"
-    else
-        log "FAILED: No /dev/dri devices"
-        dmesg | grep -i "amdgpu\|egpu_bar" | tail -10
-    fi
-fi
+sudo install -m 755 egpu-init.sh /usr/local/bin/egpu-init.sh
 ```
 
-Make it executable:
+At boot it:
+
+1. Waits up to 60 seconds for the RX 6800 (`1002:73bf`) to appear on the Thunderbolt bus.
+2. Walks the PCI path from the root port to the GPU and programs every bridge's prefetchable window to `0x4010000000-0x401FFFFFFF` (registers `0x24`, `0x28`, `0x2C`).
+3. Turns off the GPU's memory decode, sets BAR 0 to `0x4010000000` (registers `0x10`, `0x14`), then turns decode back on.
+4. Loads `egpu_bar` to patch the kernel's resource tree, then loads amdgpu.
+
+It fails closed. A bad step stops before anything touches the GPU:
+
+- **Every register is read back.** If any bridge window or BAR 0 does not read back as written, memory decode stays off, nothing is loaded, and the log names the register with the value it expected and the value it got.
+- **A card amdgpu already drives is left alone.** Rewriting BARs under a live driver hangs the machine. This matters when the script is re-run to recover a card: unbind amdgpu first.
+- **The GPU's HDMI audio function (`.1`) is unbound and kept unbound.** The machine is headless with `amdgpu.dc=0`, so it has no use.
+- **No eGPU attached is not an error.** The script logs it and exits 0, so the machine boots normally without the enclosure.
+
+Exit codes: `0` card up or no eGPU attached, `1` card found but not brought up, `3` verify-only mismatch.
+
+To check a running machine without changing anything, run it in verify-only mode. It reads every register and compares it with what the script would write:
+
 ```bash
-sudo chmod +x /usr/local/bin/egpu-init.sh
+sudo EGPU_VERIFY_ONLY=1 /usr/local/bin/egpu-init.sh
+# VERIFY: bridges + BAR 0 match
 ```
+
+The tests in [`tests/`](tests/) run both scripts against a fake `/sys` with stand-ins for `setpci`, `lspci` and `modprobe`, in an Ubuntu container: `tests/run.sh`.
 
 ## Step 5: Create the Systemd Service
 
-Create `/etc/systemd/system/egpu-init.service`:
+Install [`egpu-init.service`](egpu-init.service):
+
+```bash
+sudo cp egpu-init.service /etc/systemd/system/egpu-init.service
+sudo systemctl daemon-reload
+sudo systemctl enable egpu-init.service
+```
 
 ```ini
 [Unit]
@@ -359,17 +311,13 @@ Wants=thunderbolt.service
 Type=oneshot
 ExecStart=/usr/local/bin/egpu-init.sh
 RemainAfterExit=yes
-TimeoutStartSec=120
+TimeoutStartSec=infinity
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Enable it:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable egpu-init.service
-```
+`TimeoutStartSec=infinity` is deliberate. On a cold boot a Thunderbolt enclosure can take minutes to authorize, and a finite timeout (earlier versions used 120 s) lets systemd kill the script before the card appears, so the machine boots with no GPU. The script bounds its own wait.
 
 ## Step 6: Install Ollama with ROCm
 
@@ -407,6 +355,7 @@ uname -r                    # 7.0.9-1-t2-noble
 
 # eGPU service
 systemctl status egpu-init  # active (exited), SUCCESS
+sudo EGPU_VERIFY_ONLY=1 /usr/local/bin/egpu-init.sh   # VERIFY: bridges + BAR 0 match
 
 # GPU devices
 ls /dev/dri/                # card0, renderD128
@@ -440,8 +389,14 @@ On a clean boot with all services configured:
 
 ## Troubleshooting
 
-### GPU not found after 60s
-Check that the eGPU enclosure is powered on and the Thunderbolt cable is connected. Verify with `lspci | grep -i amd`.
+### "no eGPU attached" in the egpu-init log
+The card did not appear on the bus within 60 seconds. Check that the enclosure is powered on, the Thunderbolt cable is connected, and the enclosure is enrolled (`boltctl enroll --policy auto <uuid>`, not just authorized). Verify with `lspci -d 1002:73bf`.
+
+### "registers did not read back" in the egpu-init log
+A bridge or the GPU ignored a write. The log line names each register with the value it wanted and the value it got. The script left the card's memory decode off and loaded nothing, so the machine is safe. Usual causes: the card moved to a different bus (new port or cable; reboot), or a bridge in the chain has no 64-bit prefetchable window, in which case the above-4 GiB placement cannot work on that topology.
+
+### "already bound" in the egpu-init log
+amdgpu already drives the card, so the script did not reprogram it. To re-run the setup on a live machine, stop anything using the GPU, unbind it (`echo 0000:<bus> | sudo tee /sys/bus/pci/drivers/amdgpu/unbind`), `sudo rmmod egpu_bar`, then run `egpu-init.sh` again.
 
 ### amdgpu kernel BUG (GART page table)
 ReBAR is resizing BAR 0 to 16GB, overflowing bridge windows. Ensure `amdgpu.rebar=0` is in your GRUB config.
@@ -455,14 +410,17 @@ Missing `GRUB_RECORDFAIL_TIMEOUT`. Ubuntu's default is to wait forever after a f
 ### SSH not available after reboot
 If the machine is pingable but SSH is refused, it may be stuck at GRUB (recordfail) or a display manager is hanging. For headless operation, set `GRUB_TIMEOUT_STYLE=hidden`.
 
-### NEVER do a full PCI rescan
-`echo 1 > /sys/bus/pci/rescan` will crash the machine every time on this hardware. Don't do it.
+### NEVER do a full PCI rescan on a running machine
+`echo 1 > /sys/bus/pci/rescan` crashed a Mac Pro 2013 (Thunderbolt 2) every time ([write-up](mac-pro-2013-tb2-failure.md)). It also crashed the dual-card Mac Mini once, when it ran on a live system: one card bound to amdgpu behind the hand-programmed window, the second enclosure absent. Don't run it on a machine with a card up.
+
+The [NVIDIA method](https://github.com/TelescaAntonio/t2-egpu-nvidia) does rescan on a MacBookPro16,1, but under different conditions. Its script runs at boot before any GPU driver is loaded, turns off driver autoprobe, and removes the eGPU's bridge subtree first. The rescan then rebuilds only that subtree, with no driver behind it. That sequence has not been tried on the Mac Mini.
 
 ### Second eGPU appears "missing" right after a cold boot
 On a dual-eGPU box the second card (on the slower/farther TB controller) can take a minute or two
-longer to enumerate than the first. If `egpu-init` runs before it appears, you'll briefly see one
-card; the second binds shortly after on its own. **Wait a couple of minutes and re-check before
-concluding a card is dead.** Prefer a clean `poweroff` + Wake-on-LAN over a cold power-cycle, and
+longer to enumerate than the first, up to about 190 seconds on a cold boot. The
+[`dual-gpu/`](dual-gpu/) script waits up to 300 seconds for both cards before it programs anything,
+and its service must use `TimeoutStartSec=infinity` so systemd does not kill it first. **Wait a few
+minutes and re-check before concluding a card is dead.** Prefer a clean `poweroff` + Wake-on-LAN over a cold power-cycle, and
 resist reboot-looping to "get both faster" — repeated reboots can glitch the GPU SMU
 (`smu_v11_0_i2c_xfer ... NAK` in dmesg) and cause more trouble than the late card ever would.
 
@@ -475,6 +433,8 @@ Boot Flow:
       → Wait for GPU on Thunderbolt bus (lspci poll)
       → setpci: Program 7 bridge pref windows (64-bit space)
       → setpci: Program GPU BAR 0 = 0x4010000000 (256MB)
+      → read back every register; any mismatch: decode off, stop
+      → unbind the GPU's HDMI audio function
       → insmod egpu_bar.ko: Patch kernel resource tree
       → modprobe amdgpu: Driver binds, 16GB VRAM initialized
     → ollama.service (After=egpu-init)
@@ -484,7 +444,7 @@ Boot Flow:
 Memory Map:
   0x4000000000-0x40000FFFFF  Intel HDA (do not use)
   0x4010000000-0x401FFFFFFF  RX 6800 BAR 0 (256MB) + bridge pref windows
-  0x4020000000-0x7FFFFFFFFF  Available for second eGPU
+  0x4020000000-0x7FFFFFFFFF  Available (dual-gpu/ uses 512MB per card: 0x4010000000, 0x4030000000)
 ```
 
 ## Files
@@ -498,6 +458,9 @@ Memory Map:
 | `amdgpu-egpu.conf` | Modprobe config — blacklists amdgpu, sets options |
 | `ollama-egpu-dependency.conf` | Systemd drop-in — makes ollama wait for eGPU |
 | `grub-default` | Reference copy of /etc/default/grub |
+| `tests/` | Tests for both init scripts against a fake `/sys` (`tests/run.sh`, needs Docker) |
+| `dual-gpu/` | Two RX 6800s: 512MB window per card, BAR 0 + doorbell BAR 2 |
+| `radeon-vii/` | Two Radeon VIIs (Vega 20) |
 
 ## License
 
